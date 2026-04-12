@@ -70,19 +70,6 @@ input, textarea, select {
   overflow: hidden;
 }
 
-.os-link {
-  position: absolute;
-  top: 18px;
-  right: 16px;
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 1px;
-  color: rgba(255, 255, 255, 0.30);
-  text-decoration: none;
-  padding: 4px 8px;
-  z-index: 50;
-  cursor: pointer;
-}
 
 .screen {
   height: 100dvh;
@@ -126,7 +113,6 @@ input, textarea, select {
   font-size: 10px;
   color: var(--text-muted);
   letter-spacing: 0.5px;
-  margin-right: 60px;
 }
 
 .header-big {

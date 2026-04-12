@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import OSButton from "@/components/OSButton";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -24,8 +25,8 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <div className="app">
-          <a href="https://r2-os.vercel.app" className="os-link">R2·OS ↗</a>
           {children}
+          <OSButton />
         </div>
       </body>
     </html>
