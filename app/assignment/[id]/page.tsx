@@ -114,7 +114,7 @@ export default function AssignmentDetail() {
               onChange={(e) => setNewItem(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addItem()}
               placeholder="+ Add checklist item"
-              style={{ flex: 1, padding: 10, background: "var(--surface)", border: "0.5px solid var(--border)", borderRadius: 8, color: "white" }}
+              style={{ flex: 1, padding: 10, background: "var(--surface)", border: "0.5px solid var(--border)", borderRadius: 8, color: "var(--text)" }}
             />
             <button className="pill active" onClick={addItem}>ADD</button>
           </div>
