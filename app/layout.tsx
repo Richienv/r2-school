@@ -23,7 +23,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <div className="app">{children}</div>
+        <div className="app">
+          <a href="https://r2-os.vercel.app" className="os-link">R2·OS ↗</a>
+          {children}
+        </div>
       </body>
     </html>
   );
