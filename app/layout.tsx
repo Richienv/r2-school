@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import OSButton from "@/components/OSButton";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -26,7 +25,6 @@ export default function RootLayout({
       <body>
         <div className="app">
           {children}
-          <OSButton />
         </div>
       </body>
     </html>
