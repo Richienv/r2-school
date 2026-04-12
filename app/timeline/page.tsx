@@ -60,7 +60,7 @@ export default function TimelinePage() {
             grouped[g]?.length ? (
               <div key={g}>
                 <div className="week-group-label">{g}</div>
-                {grouped[g].map((a) => <AssignmentCard key={a.id} a={a} showProgress />)}
+                {grouped[g].map((a) => <AssignmentCard key={a.id} a={a}  />)}
               </div>
             ) : null
           )

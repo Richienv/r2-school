@@ -6,7 +6,7 @@ import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import { AssignmentCard } from "@/components/AssignmentCard";
 import { AddAssignmentSheet } from "@/components/AddAssignmentSheet";
-import { loadAssignments, daysUntil } from "@/lib/data";
+import { loadAssignments, daysUntil, getCourse } from "@/lib/data";
 import type { Assignment } from "@/lib/types";
 
 export default function HomePage() {
@@ -40,47 +40,56 @@ export default function HomePage() {
     setShowAdd(false);
   }
 
+  const urgentCourse = urgent ? getCourse(urgent.courseId) : null;
+
   return (
     <div className="screen">
       <Header />
 
-      <div className="student-card">
-        <div className="info">
-          <div className="name">Richie Kid Novell</div>
-          <div className="sid">22520759</div>
-          <div className="program">GMBA · Zhejiang University</div>
+      {/* Student + Urgent row */}
+      <div className="info-row">
+        <div className="info-left">
+          <div className="info-name">Richie Kid Novell</div>
+          <div className="info-meta">22520759 · GMBA · ZJU</div>
         </div>
-        <div className="badge">R2</div>
+        <div className="info-right">
+          {urgent && mounted ? (
+            <Link href={`/assignment/${urgent.id}`} className="urgent-pill">
+              ⚡ {urgentCourse?.shortName} · {daysUntil(urgent.dueDate)}D
+            </Link>
+          ) : (
+            <span className="all-clear">ALL CLEAR</span>
+          )}
+        </div>
       </div>
 
-      {urgent && mounted && (
-        <Link href={`/assignment/${urgent.id}`} className="urgent-banner">
-          ⚡ {urgent.title.toUpperCase()} — {daysUntil(urgent.dueDate)} DAYS
-        </Link>
-      )}
-
-      <div className="week-section">
-        <div className="label">THIS WEEK</div>
-        <div className="week-strip">
+      {/* Week strip */}
+      <div className="week-row">
+        <span className="week-label">WEEK</span>
+        <div className="week-pills">
           {weekDays.map((d) => (
-            <div key={d.key} className={`week-day ${d.today ? "today" : ""}`}>
-              <div className="wd">{d.label}</div>
-              <div className="num">{d.num}</div>
-              {d.count > 0 && <div className="due-dot" />}
+            <div key={d.key} className={`wp ${d.today ? "today" : ""}`}>
+              <span className="wp-letter">{d.label}</span>
+              <span className="wp-num">{d.num}</span>
+              {d.count > 0 && <span className="wp-dot" />}
             </div>
           ))}
         </div>
       </div>
 
-      <div className="section-label">UPCOMING</div>
+      {/* Upcoming header */}
+      <div className="upcoming-header">
+        <span className="upcoming-label">UPCOMING</span>
+        <button className="add-link" onClick={() => setShowAdd(true)}>+ ADD</button>
+      </div>
 
-      <div className="scroll-area">
+      {/* Cards */}
+      <div className="scroll-area" style={{ paddingBottom: 120 }}>
         {!mounted ? null : upcoming.length === 0 ? (
-          <div className="empty">NOTHING DUE.<div className="empty-sub">Enjoy it.</div></div>
+          <div className="empty" style={{ fontSize: 18, padding: "24px 16px" }}>NOTHING DUE.</div>
         ) : (
-          upcoming.map((a) => <AssignmentCard key={a.id} a={a} showProgress />)
+          upcoming.map((a) => <AssignmentCard key={a.id} a={a} />)
         )}
-        <button className="primary-btn" onClick={() => setShowAdd(true)}>+ ADD ASSIGNMENT</button>
       </div>
 
       <BottomNav />
@@ -93,8 +102,7 @@ function buildWeek(list: Assignment[]) {
   const labels = ["M", "T", "W", "T", "F", "S", "S"];
   const now = new Date();
   const start = new Date(now);
-  const dayOfWeek = now.getDay();
-  start.setDate(now.getDate() - ((dayOfWeek + 6) % 7));
+  start.setDate(now.getDate() - ((now.getDay() + 6) % 7));
   return Array.from({ length: 7 }).map((_, i) => {
     const d = new Date(start);
     d.setDate(start.getDate() + i);

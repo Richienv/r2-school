@@ -48,13 +48,17 @@ export default function CourseDetail() {
         <div className="stat-pill">{done} DONE</div>
       </div>
 
-      <div className="scroll-area">
+      <div className="upcoming-header">
+        <span className="upcoming-label">ASSIGNMENTS</span>
+        <button className="add-link" onClick={() => setShowAdd(true)}>+ ADD</button>
+      </div>
+
+      <div className="scroll-area" style={{ paddingBottom: 120 }}>
         {items.length === 0 ? (
-          <div className="empty">NO ASSIGNMENTS.<div className="empty-sub">Add your first.</div></div>
+          <div className="empty" style={{ fontSize: 18, padding: "24px 16px" }}>NO ASSIGNMENTS.<div className="empty-sub">Add your first.</div></div>
         ) : (
-          items.map((a) => <AssignmentCard key={a.id} a={a} showProgress />)
+          items.map((a) => <AssignmentCard key={a.id} a={a} />)
         )}
-        <button className="primary-btn" onClick={() => setShowAdd(true)}>+ ADD ASSIGNMENT</button>
         <Link href={`/catchup?course=${course.id}`} className="ghost-btn" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
           CATCH UP
         </Link>
