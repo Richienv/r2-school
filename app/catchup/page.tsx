@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Header } from "@/components/Header";
+import Link from "next/link";
 import { BottomNav } from "@/components/BottomNav";
 import { COURSES, getCourse, saveNote, newId } from "@/lib/data";
 
@@ -20,7 +20,6 @@ export default function CatchupPage() {
 
   function save() {
     if (content.trim().length < 5) return;
-    const course = getCourse(courseId);
     saveNote({
       id: newId(),
       courseId,
@@ -41,18 +40,22 @@ export default function CatchupPage() {
 
   return (
     <div className="screen">
-      <Header title="CATCH UP" />
-      <div className="scroll-list" style={{ padding: "16px 20px 16px" }}>
-        <div className="label" style={{ marginBottom: 10 }}>PASTE SLIDES OR NOTES TO SAVE</div>
+      <div className="header">
+        <Link href={course ? `/courses/${course.id}` : "/courses"} style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--text-muted)" }}>
+          ← BACK
+        </Link>
+        <div className="logo" style={{ fontSize: 18 }}>CATCH UP</div>
+        <div style={{ width: 40 }} />
+      </div>
+
+      <div className="scroll-area" style={{ padding: 16 }}>
+        <div style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: 3, color: "var(--text-muted)", marginBottom: 10 }}>
+          PASTE SLIDES OR NOTES TO SAVE
+        </div>
 
         <div className="filter-pills" style={{ padding: "12px 0" }}>
           {COURSES.map((c) => (
-            <button
-              key={c.id}
-              className={`pill ${courseId === c.id ? "active" : ""}`}
-              onClick={() => setCourseId(c.id)}
-              style={courseId === c.id ? { background: c.color, borderColor: c.color, color: "#000" } : {}}
-            >
+            <button key={c.id} className={`pill ${courseId === c.id ? "active" : ""}`} onClick={() => setCourseId(c.id)}>
               {c.shortName}
             </button>
           ))}
@@ -73,7 +76,7 @@ export default function CatchupPage() {
           />
         </div>
 
-        <button className="primary-btn yellow" onClick={save} disabled={saved || content.trim().length < 5}>
+        <button className="primary-btn" onClick={save} disabled={saved || content.trim().length < 5}>
           {saved ? "SAVED ✓" : "SAVE TO COURSE NOTES"}
         </button>
       </div>

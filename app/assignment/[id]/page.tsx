@@ -20,14 +20,7 @@ export default function AssignmentDetail() {
     setA(found ?? null);
   }, [params.id]);
 
-  if (!a) {
-    return (
-      <div className="screen">
-        <div className="empty">ASSIGNMENT NOT FOUND</div>
-        <BottomNav />
-      </div>
-    );
-  }
+  if (!a) return <div className="screen"><div className="empty">NOT FOUND</div><BottomNav /></div>;
 
   const course = getCourse(a.courseId);
   const days = daysUntil(a.dueDate);
@@ -47,8 +40,7 @@ export default function AssignmentDetail() {
   function addItem() {
     if (!newItem.trim()) return;
     const item: ChecklistItem = { id: newId(), text: newItem.trim(), done: false };
-    const checklist = [...(a!.checklist ?? []), item];
-    update({ checklist });
+    update({ checklist: [...(a!.checklist ?? []), item] });
     setNewItem("");
   }
 
@@ -61,7 +53,7 @@ export default function AssignmentDetail() {
   return (
     <div className="screen">
       <Link href="/" className="back-link">← HOME</Link>
-      <div className="detail-head" style={{ borderLeft: `4px solid ${course?.color ?? "var(--accent)"}` }}>
+      <div className="detail-head" style={{ borderLeft: "3px solid white" }}>
         <div className="type-badge">{typeLabel(a.type)}</div>
         <div className="title">{a.title}</div>
         <div className="meta">
@@ -76,7 +68,7 @@ export default function AssignmentDetail() {
           <div className="k">DUE</div>
           <div className="v" style={{ display: "flex", justifyContent: "space-between" }}>
             <span>{formatShortDate(a.dueDate)}, {a.dueDate.slice(0, 4)}</span>
-            <span style={{ color: days <= 3 ? "var(--danger)" : days <= 7 ? "var(--warning)" : "var(--accent)" }}>
+            <span style={{ fontFamily: "var(--display)" }}>
               {days < 0 ? `${Math.abs(days)} DAYS LATE` : days === 0 ? "TODAY" : `${days} DAYS`}
             </span>
           </div>
@@ -85,9 +77,7 @@ export default function AssignmentDetail() {
         <div className="detail-row">
           <div className="k">STATUS</div>
           <select value={a.status} onChange={(e) => update({ status: e.target.value as AssignmentStatus })}>
-            {STATUSES.map((s) => (
-              <option key={s} value={s}>{s.replace(/_/g, " ")}</option>
-            ))}
+            {STATUSES.map((s) => <option key={s} value={s}>{s.replace(/_/g, " ")}</option>)}
           </select>
         </div>
 
@@ -107,11 +97,7 @@ export default function AssignmentDetail() {
 
         <div className="detail-row">
           <div className="k">NOTES</div>
-          <textarea
-            value={a.notes ?? ""}
-            onChange={(e) => update({ notes: e.target.value })}
-            placeholder="Add notes..."
-          />
+          <textarea value={a.notes ?? ""} onChange={(e) => update({ notes: e.target.value })} placeholder="Add notes..." />
         </div>
 
         <div className="detail-row">
@@ -128,16 +114,13 @@ export default function AssignmentDetail() {
               onChange={(e) => setNewItem(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addItem()}
               placeholder="+ Add checklist item"
-              style={{ flex: 1, padding: 10, background: "var(--glass)", border: "1px solid var(--border)", borderRadius: 8, color: "white" }}
+              style={{ flex: 1, padding: 10, background: "var(--surface)", border: "0.5px solid var(--border)", borderRadius: 8, color: "white" }}
             />
             <button className="pill active" onClick={addItem}>ADD</button>
           </div>
         </div>
 
-        <button
-          className="primary-btn"
-          onClick={() => update({ status: a.status === "SUBMITTED" ? "DONE" : "SUBMITTED" })}
-        >
+        <button className="primary-btn" onClick={() => update({ status: a.status === "SUBMITTED" ? "DONE" : "SUBMITTED" })}>
           {a.status === "SUBMITTED" ? "MARK DONE ✓" : a.status === "DONE" ? "DONE ✓" : "MARK SUBMITTED ✓"}
         </button>
         <button className="ghost-btn" onClick={removeAssignment}>DELETE</button>

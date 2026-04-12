@@ -13,14 +13,17 @@ export function AssignmentCard({ a, showProgress = false }: { a: Assignment; sho
   return (
     <Link href={`/assignment/${a.id}`} className="card">
       <div className="assign-card">
-        <div className="bar" style={{ background: course?.color ?? "var(--accent)" }} />
+        <div className="bar" />
         <div className="info">
-          <div className="course-label">● {course?.shortName ?? "?"}</div>
+          <div className="course-label">
+            <span className="dot" />
+            {course?.shortName ?? "?"}
+          </div>
           <div className="title">{a.title}</div>
           <div className="meta">{typeLabel(a.type)} · {formatShortDate(a.dueDate)}</div>
           {showProgress && (
             <>
-              <div className="progress-bar">
+              <div className="progress-track">
                 <div className="fill" style={{ width: `${a.progress ?? 0}%` }} />
               </div>
               <div className="progress-label">{a.status.replace(/_/g, " ")}</div>

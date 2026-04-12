@@ -76,7 +76,7 @@ export default function HomePage() {
 
       <div className="scroll-area">
         {!mounted ? null : upcoming.length === 0 ? (
-          <div className="empty">NOTHING DUE. ENJOY IT.</div>
+          <div className="empty">NOTHING DUE.<div className="empty-sub">Enjoy it.</div></div>
         ) : (
           upcoming.map((a) => <AssignmentCard key={a.id} a={a} showProgress />)
         )}

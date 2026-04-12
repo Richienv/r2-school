@@ -46,11 +46,7 @@ export default function TimelinePage() {
       <div className="filter-pills">
         <button className={`pill ${filter === "ALL" ? "active" : ""}`} onClick={() => setFilter("ALL")}>ALL</button>
         {COURSES.map((c) => (
-          <button
-            key={c.id}
-            className={`pill ${filter === c.id ? "active" : ""}`}
-            onClick={() => setFilter(c.id)}
-          >
+          <button key={c.id} className={`pill ${filter === c.id ? "active" : ""}`} onClick={() => setFilter(c.id)}>
             {c.shortName}
           </button>
         ))}
@@ -61,12 +57,10 @@ export default function TimelinePage() {
           <div className="empty">NO ASSIGNMENTS MATCH</div>
         ) : (
           groupOrder.map((g) =>
-            grouped[g] && grouped[g].length > 0 ? (
+            grouped[g]?.length ? (
               <div key={g}>
                 <div className="week-group-label">{g}</div>
-                {grouped[g].map((a) => (
-                  <AssignmentCard key={a.id} a={a} showProgress />
-                ))}
+                {grouped[g].map((a) => <AssignmentCard key={a.id} a={a} showProgress />)}
               </div>
             ) : null
           )

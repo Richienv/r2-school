@@ -21,15 +21,15 @@ export default function CoursesPage() {
           const overdue = items.filter((a) => daysUntil(a.dueDate) < 0 && a.status !== "DONE").length;
           return (
             <Link key={c.id} href={`/courses/${c.id}`} className="course-card">
-              <div className="accent-dot" style={{ background: c.color }} />
+              <div className="accent-dot" />
               <div>
-                <div className="short" style={{ color: c.color }}>{c.shortName}</div>
+                <div className="short">{c.shortName}</div>
                 <div className="full">{c.name.toUpperCase()}</div>
                 <div className="prof">{c.professor}</div>
               </div>
               <div className="stats">
                 <span>
-                  {upcoming} upcoming{overdue > 0 && <> · <span className="overdue">{overdue} overdue</span></>}
+                  {upcoming} upcoming{overdue > 0 && <> · <span className="overdue-flag">{overdue} overdue!</span></>}
                 </span>
                 <span>›</span>
               </div>

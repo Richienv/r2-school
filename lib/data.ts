@@ -8,7 +8,7 @@ export const COURSES: Course[] = [
     name: "International Business",
     shortName: "IB",
     professor: "Prof. Simon Collinson",
-    color: "#2D7DD2",
+    color: "#FFFFFF",
     active: true,
   },
   {
@@ -16,7 +16,7 @@ export const COURSES: Course[] = [
     name: "Strategic Management",
     shortName: "SM",
     professor: "Prof.",
-    color: "#7B2FBE",
+    color: "#FFFFFF",
     active: true,
   },
   {
@@ -24,7 +24,7 @@ export const COURSES: Course[] = [
     name: "Innovation",
     shortName: "INN",
     professor: "Prof. Wenjing Lyu",
-    color: "#E8FF47",
+    color: "#FFFFFF",
     active: true,
   },
   {
@@ -32,7 +32,7 @@ export const COURSES: Course[] = [
     name: "Blockchain",
     shortName: "BC",
     professor: "Prof.",
-    color: "#F7931A",
+    color: "#FFFFFF",
     active: true,
   },
   {
@@ -40,7 +40,7 @@ export const COURSES: Course[] = [
     name: "AI Decision Making",
     shortName: "AI",
     professor: "Prof.",
-    color: "#00D4AA",
+    color: "#FFFFFF",
     active: true,
   },
   {
@@ -48,7 +48,7 @@ export const COURSES: Course[] = [
     name: "Chinese",
     shortName: "CN",
     professor: "Prof.",
-    color: "#FF6B6B",
+    color: "#FFFFFF",
     active: true,
   },
 ];

@@ -49,20 +49,19 @@ export function AddAssignmentSheet({
     onSaved();
   }
 
+  const isGroup = type === "GROUP_PRESENTATION";
+
   return (
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="sheet" onClick={(e) => e.stopPropagation()}>
-        <div className="label" style={{ marginBottom: 16 }}>ADD ASSIGNMENT</div>
+        <div className="drag-handle" />
+        <div className="sheet-title">ADD ASSIGNMENT</div>
 
         <div className="field">
           <label>COURSE</label>
-          <div className="filter-pills" style={{ padding: 0 }}>
+          <div className="filter-pills" style={{ padding: 0, flexWrap: "wrap" }}>
             {COURSES.map((c) => (
-              <button
-                key={c.id}
-                className={`pill ${courseId === c.id ? "active" : ""}`}
-                onClick={() => setCourseId(c.id)}
-              >
+              <button key={c.id} className={`pill ${courseId === c.id ? "active" : ""}`} onClick={() => setCourseId(c.id)}>
                 {c.shortName}
               </button>
             ))}
@@ -76,11 +75,13 @@ export function AddAssignmentSheet({
 
         <div className="field">
           <label>TYPE</label>
-          <select value={type} onChange={(e) => setType(e.target.value as AssignmentType)}>
+          <div className="filter-pills" style={{ padding: 0, flexWrap: "wrap" }}>
             {TYPES.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
+              <button key={t.value} className={`pill ${type === t.value ? "active" : ""}`} onClick={() => setType(t.value)}>
+                {t.label.toUpperCase()}
+              </button>
             ))}
-          </select>
+          </div>
         </div>
 
         <div className="field">
@@ -90,20 +91,20 @@ export function AddAssignmentSheet({
 
         <div className="field">
           <label>DESCRIPTION (OPTIONAL)</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} />
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Details..." />
         </div>
 
-        {type === "GROUP_PRESENTATION" && (
+        {isGroup && (
           <div className="field">
             <label>GROUP MEMBERS (COMMA-SEPARATED)</label>
             <input value={members} onChange={(e) => setMembers(e.target.value)} placeholder="Richie, ..." />
           </div>
         )}
 
-        <div className="sheet-actions">
-          <button className="ghost-btn" style={{ margin: 0 }} onClick={onClose}>CANCEL</button>
-          <button className="primary-btn" style={{ margin: 0 }} onClick={save}>SAVE ASSIGNMENT</button>
-        </div>
+        <button className="primary-btn" style={{ marginTop: 8 }} onClick={save} disabled={!title || !dueDate}>
+          SAVE ASSIGNMENT →
+        </button>
+        <button className="ghost-btn" onClick={onClose}>CANCEL</button>
       </div>
     </div>
   );

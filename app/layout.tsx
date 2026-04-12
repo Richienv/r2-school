@@ -1,13 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Oswald } from "next/font/google";
 import "./globals.css";
-
-const display = Oswald({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-display",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "R2·SCHOOL",
@@ -29,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={display.variable}>
+    <html lang="en">
       <body>
         <div className="app">{children}</div>
       </body>
