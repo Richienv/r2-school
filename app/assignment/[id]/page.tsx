@@ -61,7 +61,7 @@ export default function AssignmentDetail() {
   return (
     <div className="screen">
       <Link href="/" className="back-link">← HOME</Link>
-      <div className="detail-head" style={{ borderLeft: `3px solid ${course?.color ?? "var(--accent)"}` }}>
+      <div className="detail-head" style={{ borderLeft: `4px solid ${course?.color ?? "var(--accent)"}` }}>
         <div className="type-badge">{typeLabel(a.type)}</div>
         <div className="title">{a.title}</div>
         <div className="meta">
@@ -76,7 +76,7 @@ export default function AssignmentDetail() {
           <div className="k">DUE</div>
           <div className="v" style={{ display: "flex", justifyContent: "space-between" }}>
             <span>{formatShortDate(a.dueDate)}, {a.dueDate.slice(0, 4)}</span>
-            <span style={{ color: days <= 2 ? "var(--danger)" : days <= 5 ? "var(--warning)" : "var(--accent-light)" }}>
+            <span style={{ color: days <= 3 ? "var(--danger)" : days <= 7 ? "var(--warning)" : "var(--accent)" }}>
               {days < 0 ? `${Math.abs(days)} DAYS LATE` : days === 0 ? "TODAY" : `${days} DAYS`}
             </span>
           </div>
@@ -128,7 +128,7 @@ export default function AssignmentDetail() {
               onChange={(e) => setNewItem(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addItem()}
               placeholder="+ Add checklist item"
-              style={{ flex: 1, padding: 10, background: "var(--surface)", border: "0.5px solid var(--border)", borderRadius: 8 }}
+              style={{ flex: 1, padding: 10, background: "var(--glass)", border: "1px solid var(--border)", borderRadius: 8, color: "white" }}
             />
             <button className="pill active" onClick={addItem}>ADD</button>
           </div>

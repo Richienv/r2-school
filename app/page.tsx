@@ -28,7 +28,10 @@ export default function HomePage() {
     [list]
   );
 
-  const urgent = upcoming.find((a) => daysUntil(a.dueDate) <= 3 && daysUntil(a.dueDate) >= 0);
+  const urgent = upcoming.find((a) => {
+    const d = daysUntil(a.dueDate);
+    return d >= 0 && d <= 5;
+  });
 
   const weekDays = useMemo(() => buildWeek(list), [list]);
 
@@ -40,68 +43,64 @@ export default function HomePage() {
   return (
     <div className="screen">
       <Header />
+
+      <div className="student-card">
+        <div className="info">
+          <div className="name">Richie Kid Novell</div>
+          <div className="sid">22520759</div>
+          <div className="program">GMBA · Zhejiang University</div>
+        </div>
+        <div className="badge">R2</div>
+      </div>
+
       {urgent && mounted && (
         <Link href={`/assignment/${urgent.id}`} className="urgent-banner">
-          ⚠ {urgent.title.toUpperCase()} — {daysUntil(urgent.dueDate)} DAYS LEFT
+          ⚡ {urgent.title.toUpperCase()} — {daysUntil(urgent.dueDate)} DAYS
         </Link>
       )}
 
-      <div className="week-strip">
-        {weekDays.map((d) => (
-          <div key={d.key} className={`week-day ${d.today ? "today" : ""}`}>
-            <div className="wd">{d.label}</div>
-            <div className="num">{d.num}</div>
-            {d.count > 0 && <div className="dot" />}
-          </div>
-        ))}
+      <div className="week-section">
+        <div className="label">THIS WEEK</div>
+        <div className="week-strip">
+          {weekDays.map((d) => (
+            <div key={d.key} className={`week-day ${d.today ? "today" : ""}`}>
+              <div className="wd">{d.label}</div>
+              <div className="num">{d.num}</div>
+              {d.count > 0 && <div className="due-dot" />}
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="section">
-        <div className="section-title">UPCOMING</div>
-      </div>
+      <div className="section-label">UPCOMING</div>
 
-      <div className="scroll-list">
+      <div className="scroll-area">
         {!mounted ? null : upcoming.length === 0 ? (
           <div className="empty">NOTHING DUE. ENJOY IT.</div>
         ) : (
-          upcoming.map((a) => <AssignmentCard key={a.id} a={a} />)
+          upcoming.map((a) => <AssignmentCard key={a.id} a={a} showProgress />)
         )}
-      </div>
-
-      <div className="quick-actions">
-        <Link href="/courses" className="quick-btn">
-          <span className="icon">▦</span>
-          <span>COURSES</span>
-        </Link>
-        <button className="quick-btn primary" onClick={() => setShowAdd(true)}>
-          <span className="icon">+</span>
-          <span>ADD TASK</span>
-        </button>
-        <Link href="/catchup" className="quick-btn yellow">
-          <span className="icon">✦</span>
-          <span>CATCH UP</span>
-        </Link>
+        <button className="primary-btn" onClick={() => setShowAdd(true)}>+ ADD ASSIGNMENT</button>
       </div>
 
       <BottomNav />
-
       {showAdd && <AddAssignmentSheet onClose={() => setShowAdd(false)} onSaved={refresh} />}
     </div>
   );
 }
 
 function buildWeek(list: Assignment[]) {
-  const labels = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+  const labels = ["M", "T", "W", "T", "F", "S", "S"];
   const now = new Date();
   const start = new Date(now);
-  start.setDate(now.getDate() - now.getDay() + 1);
+  const dayOfWeek = now.getDay();
+  start.setDate(now.getDate() - ((dayOfWeek + 6) % 7));
   return Array.from({ length: 7 }).map((_, i) => {
     const d = new Date(start);
     d.setDate(start.getDate() + i);
     const iso = d.toISOString().slice(0, 10);
-    const label = labels[(i + 1) % 7];
     const count = list.filter((a) => a.dueDate === iso).length;
     const today = d.toDateString() === now.toDateString();
-    return { key: iso, label, num: d.getDate(), count, today };
+    return { key: iso, label: labels[i], num: d.getDate(), count, today };
   });
 }

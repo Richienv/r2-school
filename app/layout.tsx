@@ -1,20 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans, DM_Mono, Oswald } from "next/font/google";
+import { Oswald } from "next/font/google";
 import "./globals.css";
-
-const body = DM_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-body",
-  display: "swap",
-});
-
-const mono = DM_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-mono",
-  display: "swap",
-});
 
 const display = Oswald({
   subsets: ["latin"],
@@ -29,11 +15,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#03080F",
+  themeColor: "#1515E0",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({
@@ -42,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${body.variable} ${mono.variable} ${display.variable}`}>
+    <html lang="en" className={display.variable}>
       <body>
         <div className="app">{children}</div>
       </body>

@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { BottomNav } from "@/components/BottomNav";
 import { AssignmentCard } from "@/components/AssignmentCard";
 import { AddAssignmentSheet } from "@/components/AddAssignmentSheet";
-import { getCourse, loadAssignments, loadNotes } from "@/lib/data";
+import { getCourse, loadAssignments, loadNotes, daysUntil } from "@/lib/data";
 import type { Assignment, ClassNote } from "@/lib/types";
 
 export default function CourseDetail() {
@@ -27,6 +27,9 @@ export default function CourseDetail() {
     .filter((a) => a.courseId === course.id)
     .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
 
+  const upcoming = courseAssignments.filter((a) => a.status !== "DONE" && daysUntil(a.dueDate) >= 0).length;
+  const overdue = courseAssignments.filter((a) => daysUntil(a.dueDate) < 0 && a.status !== "DONE").length;
+  const done = courseAssignments.filter((a) => a.status === "DONE").length;
   const courseNotes = notes.filter((n) => n.courseId === course.id).slice(0, 3);
 
   function refresh() {
@@ -37,34 +40,45 @@ export default function CourseDetail() {
   return (
     <div className="screen">
       <Link href="/courses" className="back-link">← COURSES</Link>
-      <div className="detail-head" style={{ borderLeft: `3px solid ${course.color}` }}>
-        <div className="type-badge" style={{ color: course.color }}>{course.shortName}</div>
-        <div className="title">{course.name}</div>
-        <div className="meta"><span>{course.professor}</span></div>
+      <div className="detail-head">
+        <div className="title" style={{ fontFamily: "var(--display)", fontSize: 48, color: course.color }}>{course.shortName}</div>
+        <div className="meta" style={{ marginTop: 4 }}>
+          <span style={{ fontFamily: "var(--mono)", fontSize: 10, letterSpacing: 2, color: "var(--text-dim)" }}>{course.name.toUpperCase()}</span>
+        </div>
+        <div className="meta" style={{ marginTop: 4 }}>
+          <span>{course.professor}</span>
+        </div>
       </div>
 
-      <div className="scroll-list">
-        <div className="section-title" style={{ marginTop: 16 }}>ASSIGNMENTS</div>
+      <div className="stats-pills">
+        <div className="stat-pill">{upcoming} UPCOMING</div>
+        <div className="stat-pill" style={overdue > 0 ? { color: "var(--danger)" } : {}}>{overdue} OVERDUE</div>
+        <div className="stat-pill">{done} DONE</div>
+      </div>
+
+      <div className="scroll-area">
         {courseAssignments.length === 0 ? (
-          <div className="empty">NO ASSIGNMENTS YET</div>
+          <div className="empty">
+            NO ASSIGNMENTS YET.<br />ADD YOUR FIRST ONE.
+          </div>
         ) : (
           courseAssignments.map((a) => <AssignmentCard key={a.id} a={a} showProgress />)
         )}
 
-        <div className="section-title" style={{ marginTop: 24 }}>RECENT NOTES</div>
-        {courseNotes.length === 0 ? (
-          <div className="empty">NO NOTES SAVED</div>
-        ) : (
-          courseNotes.map((n) => (
-            <div key={n.id} className="card">
-              <div className="label">{n.date}</div>
-              <div style={{ marginTop: 8, fontSize: 13 }}>{n.aiSummary}</div>
-            </div>
-          ))
+        {courseNotes.length > 0 && (
+          <>
+            <div className="label" style={{ margin: "20px 0 10px" }}>RECENT NOTES</div>
+            {courseNotes.map((n) => (
+              <div key={n.id} className="card" style={{ padding: 14 }}>
+                <div className="label">{n.date}</div>
+                <div style={{ marginTop: 8, fontSize: 13, color: "var(--text-dim)" }}>{n.rawContent.slice(0, 120)}...</div>
+              </div>
+            ))}
+          </>
         )}
 
         <button className="primary-btn" onClick={() => setShowAdd(true)}>+ ADD ASSIGNMENT</button>
-        <Link href={`/catchup?course=${course.id}`} className="primary-btn yellow" style={{ display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}>
+        <Link href={`/catchup?course=${course.id}`} className="ghost-btn" style={{ display: "flex", alignItems: "center", justifyContent: "center", marginTop: 10 }}>
           ✦ CATCH UP
         </Link>
       </div>

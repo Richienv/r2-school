@@ -7,7 +7,7 @@ export const COURSES: Course[] = [
     id: "ib",
     name: "International Business",
     shortName: "IB",
-    professor: "Prof. Collinson",
+    professor: "Prof. Simon Collinson",
     color: "#2D7DD2",
     active: true,
   },
@@ -23,7 +23,7 @@ export const COURSES: Course[] = [
     id: "innovation",
     name: "Innovation",
     shortName: "INN",
-    professor: "Prof. Lyu",
+    professor: "Prof. Wenjing Lyu",
     color: "#E8FF47",
     active: true,
   },
@@ -78,11 +78,11 @@ const SEED_ASSIGNMENTS: Assignment[] = [
     createdAt: "2026-04-01",
   },
   {
-    id: "seed-sm-chagee",
+    id: "seed-sm-case",
     courseId: "sm",
-    title: "CHAGEE Case Analysis",
+    title: "Weekly case analysis",
     type: "HOMEWORK",
-    dueDate: "2026-04-23",
+    dueDate: "2026-04-20",
     status: "NOT_STARTED",
     description: "Individual case write-up",
     notes: "",
@@ -90,11 +90,25 @@ const SEED_ASSIGNMENTS: Assignment[] = [
     checklist: [],
     createdAt: "2026-04-01",
   },
+  {
+    id: "seed-inn-anthropic",
+    courseId: "innovation",
+    title: "Anthropic ecosystem proposal",
+    type: "INDIVIDUAL_PROJECT",
+    dueDate: "2026-04-20",
+    status: "IN_PROGRESS",
+    description: "Week 4 team project",
+    groupMembers: ["Ruitong", "He Yan", "Siwen", "Richie", "Enjia"],
+    notes: "",
+    progress: 20,
+    checklist: [],
+    createdAt: "2026-04-01",
+  },
 ];
 
-const ASSIGN_KEY = "r2school.assignments.v1";
-const NOTES_KEY = "r2school.notes.v1";
-const SEED_FLAG = "r2school.seeded.v1";
+const ASSIGN_KEY = "r2school.assignments.v2";
+const NOTES_KEY = "r2school.notes.v2";
+const SEED_FLAG = "r2school.seeded.v2";
 
 function isBrowser() {
   return typeof window !== "undefined";
