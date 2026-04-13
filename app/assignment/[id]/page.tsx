@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { BottomNav } from "@/components/BottomNav";
-import { loadAssignments, upsertAssignment, deleteAssignment, getCourse, daysUntil, formatShortDate, typeLabel, newId } from "@/lib/data";
+import { loadAssignments, upsertAssignment, deleteAssignment, getCourse, daysUntil, typeLabel, newId } from "@/lib/data";
 import type { Assignment, AssignmentStatus, ChecklistItem } from "@/lib/types";
 
 const STATUSES: AssignmentStatus[] = ["NOT_STARTED", "IN_PROGRESS", "SUBMITTED", "DONE"];
@@ -55,7 +55,13 @@ export default function AssignmentDetail() {
       <Link href="/" className="back-link">← HOME</Link>
       <div className="detail-head" style={{ borderLeft: "3px solid white" }}>
         <div className="type-badge">{typeLabel(a.type)}</div>
-        <div className="title">{a.title}</div>
+        <input
+          className="title"
+          value={a.title}
+          onChange={(e) => update({ title: e.target.value })}
+          placeholder="Assignment title"
+          style={{ background: "transparent", border: 0, outline: "none", color: "var(--text)", width: "100%", padding: 0, font: "inherit" }}
+        />
         <div className="meta">
           <span>{course?.name}</span>
           <span>·</span>
@@ -66,9 +72,14 @@ export default function AssignmentDetail() {
       <div className="detail-body">
         <div className="detail-row">
           <div className="k">DUE</div>
-          <div className="v" style={{ display: "flex", justifyContent: "space-between" }}>
-            <span>{formatShortDate(a.dueDate)}, {a.dueDate.slice(0, 4)}</span>
-            <span style={{ fontFamily: "var(--display)" }}>
+          <div className="v" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+            <input
+              type="date"
+              value={a.dueDate}
+              onChange={(e) => update({ dueDate: e.target.value })}
+              style={{ flex: 1 }}
+            />
+            <span style={{ fontFamily: "var(--display)", whiteSpace: "nowrap" }}>
               {days < 0 ? `${Math.abs(days)} DAYS LATE` : days === 0 ? "TODAY" : `${days} DAYS`}
             </span>
           </div>

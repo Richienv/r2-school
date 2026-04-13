@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { HeaderBig } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
-import { COURSES, loadNotes } from "@/lib/data";
+import { COURSES, loadNotes, saveNote, newId } from "@/lib/data";
 import type { ClassNote } from "@/lib/types";
 
 interface Question {
@@ -25,8 +25,33 @@ export default function PracticePage() {
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<(string | null)[]>([]);
   const [revealed, setRevealed] = useState(false);
+  const [learnedText, setLearnedText] = useState("");
+  const [savedFlash, setSavedFlash] = useState(false);
 
   useEffect(() => setNotes(loadNotes()), []);
+
+  function saveLearned() {
+    if (!courseId || learnedText.trim().length < 5) return;
+    const today = new Date();
+    const targetWeek = week ?? Math.ceil(today.getDate() / 7);
+    const day = Math.min(28, (targetWeek - 1) * 7 + 1);
+    const iso = new Date(today.getFullYear(), today.getMonth(), day)
+      .toISOString()
+      .slice(0, 10);
+    saveNote({
+      id: newId(),
+      courseId,
+      date: iso,
+      rawContent: learnedText.trim(),
+      aiSummary: "",
+      keyPoints: [],
+      createdAt: new Date().toISOString(),
+    });
+    setNotes(loadNotes());
+    setLearnedText("");
+    setSavedFlash(true);
+    setTimeout(() => setSavedFlash(false), 1500);
+  }
 
   const courseNotes = useMemo(
     () => (courseId ? notes.filter((n) => n.courseId === courseId) : []),
@@ -187,6 +212,26 @@ export default function PracticePage() {
               })}
             </div>
           </>
+        )}
+
+        {courseId && (
+          <div className="field" style={{ marginTop: 24 }}>
+            <label>WHAT I LEARNED / WANT TO PRACTICE</label>
+            <textarea
+              value={learnedText}
+              onChange={(e) => setLearnedText(e.target.value)}
+              placeholder="Topics, concepts, anything to drill on..."
+              style={{ minHeight: 100 }}
+            />
+            <button
+              className="primary-btn"
+              onClick={saveLearned}
+              disabled={savedFlash || learnedText.trim().length < 5}
+              style={{ marginTop: 8 }}
+            >
+              {savedFlash ? "SAVED ✓" : week ? `SAVE TO WK ${week}` : "SAVE NOTE"}
+            </button>
+          </div>
         )}
 
         {courseId && week && (
