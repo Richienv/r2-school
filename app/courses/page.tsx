@@ -42,7 +42,7 @@ export default function CoursesPage() {
             return (
               <Link key={c.id} href={`/courses/${c.id}`} className="cx-card">
                 <div className="cx-top">
-                  <span className="cx-code">{c.shortName}</span>
+                  <span className="cx-code" style={{ color: c.color }}>{c.shortName}</span>
                   {mounted && urgent > 0 && (
                     <span className="cx-urgent">⚡ {urgent} DUE</span>
                   )}

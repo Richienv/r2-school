@@ -13,6 +13,8 @@ export default function HomePage() {
   const [list, setList] = useState<Assignment[]>([]);
   const [mounted, setMounted] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
   const [settings] = useSettings();
   const threshold = settings.urgentThreshold;
 
@@ -33,6 +35,14 @@ export default function HomePage() {
     [list]
   );
 
+  useEffect(() => {
+    if (!mounted || selectedDate !== null || upcoming.length === 0) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const hasToday = upcoming.some((a) => a.dueDate === today);
+    const nearest = upcoming.find((a) => a.dueDate >= today) ?? upcoming[0];
+    setSelectedDate(hasToday ? today : nearest.dueDate);
+  }, [mounted, upcoming, selectedDate]);
+
   const urgent = upcoming.find((a) => {
     const d = daysUntil(a.dueDate);
     return d >= 0 && d <= threshold;
@@ -40,10 +50,25 @@ export default function HomePage() {
 
   const weekDays = useMemo(() => buildWeek(list), [list]);
 
+  const filtered = useMemo(() => {
+    if (showAll) return upcoming;
+    if (!selectedDate) return [];
+    return upcoming.filter((a) => a.dueDate === selectedDate);
+  }, [upcoming, selectedDate, showAll]);
+
   async function refresh() {
     const list = await loadAssignments();
     setList(list);
     setShowAdd(false);
+  }
+
+  function pickDate(iso: string) {
+    setShowAll(false);
+    setSelectedDate(iso);
+  }
+
+  function toggleAll() {
+    setShowAll((v) => !v);
   }
 
   const urgentCourse = urgent ? getCourse(urgent.courseId) : null;
@@ -73,26 +98,42 @@ export default function HomePage() {
       <div className="week-row">
         <span className="week-label">WEEK</span>
         <div className="week-pills">
-          {weekDays.map((d) => (
-            <div key={d.key} className={`wp ${d.today ? "today" : ""}`}>
-              <span className="wp-letter">{d.label}</span>
-              <span className="wp-num">{d.num}</span>
-              {d.count > 0 && <span className="wp-dot" />}
-            </div>
-          ))}
+          {weekDays.map((d) => {
+            const selected = !showAll && selectedDate === d.key;
+            return (
+              <button
+                key={d.key}
+                type="button"
+                onClick={() => pickDate(d.key)}
+                className={`wp ${selected ? "today" : ""}`}
+              >
+                <span className="wp-letter">{d.label}</span>
+                <span className="wp-num">{d.num}</span>
+                {d.count > 0 && <span className="wp-dot" />}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       <div className="upcoming-header">
-        <span className="upcoming-label">UPCOMING</span>
+        <span className="upcoming-label">
+          {showAll ? "ALL UPCOMING" : selectedDate ? formatHeaderDate(selectedDate) : "UPCOMING"}
+        </span>
+        <button type="button" className="all-toggle" onClick={toggleAll}>
+          {showAll ? "← BACK" : "ALL →"}
+        </button>
       </div>
 
       <div className="tl-area">
-        {!mounted ? null : upcoming.length === 0 ? (
-          <div className="grid-empty">NOTHING DUE.</div>
+        {!mounted ? null : filtered.length === 0 ? (
+          <div className="tl-empty">
+            <div className="tl-empty-main">NOTHING DUE.</div>
+            <div className="tl-empty-sub">tap another date or view all</div>
+          </div>
         ) : (
           <div className="tl-list">
-            {upcoming.map((a) => (
+            {filtered.map((a) => (
               <TimelineRow key={a.id} a={a} />
             ))}
           </div>
@@ -116,6 +157,13 @@ export default function HomePage() {
 function shortUni(name: string): string {
   const m = name.match(/\b([A-Z])/g);
   return m ? m.join("") : name.slice(0, 4).toUpperCase();
+}
+
+function formatHeaderDate(iso: string): string {
+  const d = new Date(iso + "T00:00:00");
+  const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+  const weekdays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+  return `${weekdays[d.getDay()]} · ${months[d.getMonth()]} ${d.getDate()}`;
 }
 
 function TimelineRow({ a }: { a: Assignment }) {

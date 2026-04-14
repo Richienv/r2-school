@@ -226,6 +226,11 @@ input, textarea, select {
   justify-content: center;
   gap: 0;
   position: relative;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .wp.today {
@@ -284,6 +289,36 @@ input, textarea, select {
   font-size: 8px;
   letter-spacing: 3px;
   color: var(--text-muted);
+}
+
+.all-toggle {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #e8ff47;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.tl-empty {
+  padding: 48px 16px;
+  text-align: center;
+}
+
+.tl-empty-main {
+  font-family: var(--display);
+  font-size: 24px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.tl-empty-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #444;
 }
 
 .add-link {
@@ -949,8 +984,8 @@ input, textarea, select {
   display: flex;
   flex-direction: column;
   background: #111111;
-  border: 0.5px solid #2a2a2a;
-  border-radius: 6px;
+  border: 0.5px solid #222;
+  border-radius: 8px;
   padding: 14px;
   text-decoration: none;
   overflow: hidden;
@@ -981,11 +1016,12 @@ input, textarea, select {
 }
 
 .cx-name {
-  font-family: var(--display);
-  font-size: 22px;
+  font-family: var(--body);
+  font-size: 16px;
+  font-weight: 600;
   color: #ffffff;
-  text-transform: uppercase;
-  line-height: 1.1;
+  text-transform: none;
+  line-height: 1.25;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
