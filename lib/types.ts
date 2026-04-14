@@ -4,7 +4,11 @@ export type AssignmentType =
   | "HOMEWORK"
   | "INDIVIDUAL_PROJECT"
   | "MIDTERM"
-  | "FINAL";
+  | "FINAL"
+  | "EXAM"
+  | "QUIZ"
+  | "MEETING"
+  | "PREPARATION";
 
 export type AssignmentStatus =
   | "NOT_STARTED"

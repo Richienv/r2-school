@@ -58,7 +58,7 @@ export function getCourse(id: string): Course | undefined {
 }
 
 const LEGACY_ASSIGN_KEY = "r2school.assignments.v2";
-const LEGACY_SYNC_FLAG = "r2school.synced.v1";
+const LEGACY_SYNC_FLAG = "r2school.synced.v2";
 const NOTES_KEY = "r2school.notes.v2";
 const COURSE_NOTES_KEY = "r2school.coursenotes.v1";
 const WEEK_ENTRIES_KEY = "r2school.weekentries.v1";
@@ -156,20 +156,39 @@ export async function deleteAssignment(id: string): Promise<boolean> {
 export async function syncLegacyAssignments(): Promise<void> {
   if (!isBrowser()) return;
   try {
-    if (localStorage.getItem(LEGACY_SYNC_FLAG)) return;
-    const raw = localStorage.getItem(LEGACY_ASSIGN_KEY);
-    if (!raw) {
+    console.log("[sync] all localStorage keys:", Object.keys(localStorage));
+
+    if (localStorage.getItem(LEGACY_SYNC_FLAG)) {
+      console.log("[sync] already synced, skipping");
+      return;
+    }
+
+    const candidateKeys = Object.keys(localStorage).filter((k) =>
+      k.toLowerCase().includes("assignment")
+    );
+    console.log("[sync] candidate assignment keys:", candidateKeys);
+
+    let parsed: Assignment[] = [];
+    for (const key of [LEGACY_ASSIGN_KEY, ...candidateKeys]) {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      try {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr) && arr.length > 0) {
+          console.log(`[sync] found ${arr.length} items in "${key}"`);
+          parsed = arr as Assignment[];
+          break;
+        }
+      } catch {}
+    }
+
+    if (parsed.length === 0) {
+      console.log("[sync] no legacy assignments found, marking synced");
       localStorage.setItem(LEGACY_SYNC_FLAG, "1");
       return;
     }
-    const parsed = JSON.parse(raw) as Assignment[];
-    const legacy = parsed.filter((a) => !a.id.startsWith("seed-"));
-    if (legacy.length === 0) {
-      localStorage.setItem(LEGACY_SYNC_FLAG, "1");
-      localStorage.removeItem(LEGACY_ASSIGN_KEY);
-      return;
-    }
-    const payload = legacy.map((a) => ({
+
+    const payload = parsed.map((a) => ({
       title: a.title,
       courseCode: a.courseId,
       type: a.type,
@@ -181,16 +200,24 @@ export async function syncLegacyAssignments(): Promise<void> {
       groupMembers: a.groupMembers,
       checklist: a.checklist,
     }));
+
+    console.log(`[sync] POSTing ${payload.length} assignments to /api/assignments/sync`);
     const res = await fetch("/api/assignments/sync", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ assignments: payload }),
     });
+    const body = await res.json().catch(() => ({}));
+    console.log("[sync] response:", res.status, body);
+
     if (res.ok) {
       localStorage.setItem(LEGACY_SYNC_FLAG, "1");
       localStorage.removeItem(LEGACY_ASSIGN_KEY);
+      console.log("[sync] migration complete, localStorage cleared");
     }
-  } catch {}
+  } catch (err) {
+    console.error("[sync] error:", err);
+  }
 }
 
 export function loadNotes(): ClassNote[] {

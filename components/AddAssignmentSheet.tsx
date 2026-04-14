@@ -2,21 +2,17 @@
 
 import { useState } from "react";
 import { COURSES, createAssignment } from "@/lib/data";
-import type { AssignmentStatus, AssignmentType } from "@/lib/types";
+import type { AssignmentType } from "@/lib/types";
 
 const TYPES: { value: AssignmentType; label: string }[] = [
   { value: "HOMEWORK", label: "Homework" },
   { value: "GROUP_PRESENTATION", label: "Group Presentation" },
   { value: "INDIVIDUAL_PROJECT", label: "Individual Project" },
   { value: "INDIVIDUAL_PRESENTATION", label: "Individual Presentation" },
-  { value: "FINAL", label: "Exam" },
-  { value: "MIDTERM", label: "Quiz" },
-];
-
-const STATUSES: { value: AssignmentStatus; label: string }[] = [
-  { value: "NOT_STARTED", label: "Not Started" },
-  { value: "IN_PROGRESS", label: "In Progress" },
-  { value: "DONE", label: "Done" },
+  { value: "EXAM", label: "Exam" },
+  { value: "QUIZ", label: "Quiz" },
+  { value: "MEETING", label: "Meeting" },
+  { value: "PREPARATION", label: "Preparation" },
 ];
 
 export function AddAssignmentSheet({
@@ -32,8 +28,6 @@ export function AddAssignmentSheet({
   const [title, setTitle] = useState("");
   const [type, setType] = useState<AssignmentType>("HOMEWORK");
   const [dueDate, setDueDate] = useState("");
-  const [status, setStatus] = useState<AssignmentStatus>("NOT_STARTED");
-  const [progress, setProgress] = useState(0);
 
   async function save() {
     if (!title || !dueDate) return;
@@ -42,9 +36,9 @@ export function AddAssignmentSheet({
       title,
       type,
       dueDate,
-      status,
+      status: "NOT_STARTED",
       notes: "",
-      progress,
+      progress: 0,
       checklist: [],
     });
     onSaved();
@@ -63,12 +57,23 @@ export function AddAssignmentSheet({
 
         <div className="field">
           <label>COURSE</label>
-          <div className="filter-pills" style={{ padding: 0, flexWrap: "wrap" }}>
-            {COURSES.map((c) => (
-              <button key={c.id} className={`pill ${courseId === c.id ? "active" : ""}`} onClick={() => setCourseId(c.id)}>
-                {c.shortName}
-              </button>
-            ))}
+          <div className="cc-grid">
+            {COURSES.map((c) => {
+              const selected = courseId === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={`cc-opt ${selected ? "selected" : ""}`}
+                  onClick={() => setCourseId(c.id)}
+                >
+                  <span className="cc-code" style={{ color: selected ? c.color : "#666" }}>
+                    {c.shortName}
+                  </span>
+                  <span className="cc-name">{c.name}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -86,32 +91,6 @@ export function AddAssignmentSheet({
         <div className="field">
           <label>DUE DATE</label>
           <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-        </div>
-
-        <div className="field">
-          <label>STATUS</label>
-          <div className="filter-pills" style={{ padding: 0, flexWrap: "wrap" }}>
-            {STATUSES.map((s) => (
-              <button key={s.value} className={`pill ${status === s.value ? "active" : ""}`} onClick={() => setStatus(s.value)}>
-                {s.label.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="field">
-          <label>PROGRESS</label>
-          <div className="slider-row">
-            <input
-              type="range"
-              min={0}
-              max={100}
-              step={5}
-              value={progress}
-              onChange={(e) => setProgress(Number(e.target.value))}
-            />
-            <span className="slider-val">{progress}%</span>
-          </div>
         </div>
 
         <div className="sheet-actions">

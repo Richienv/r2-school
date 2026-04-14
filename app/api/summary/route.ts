@@ -16,25 +16,46 @@ export async function OPTIONS() {
 
 export async function GET() {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const threshold = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000);
+    const CST_OFFSET_MS = 8 * 60 * 60 * 1000;
+    const cstNow = new Date(Date.now() + CST_OFFSET_MS);
 
-    const urgent = await prisma.assignment.findMany({
-      where: {
-        status: { not: "DONE" },
-        dueDate: { lte: threshold },
-      },
+    const all = await prisma.assignment.findMany({
+      where: { status: { not: "DONE" } },
       orderBy: { dueDate: "asc" },
     });
 
+    const soonest = all[0];
+    const daysLeft = soonest
+      ? Math.round(
+          (soonest.dueDate.getTime() - cstNow.getTime()) / (1000 * 60 * 60 * 24)
+        )
+      : null;
+
+    const label =
+      daysLeft === null
+        ? "all clear"
+        : daysLeft <= 0
+        ? "TODAY"
+        : daysLeft === 1
+        ? "TOMORROW"
+        : `${daysLeft} DAYS`;
+
+    const urgency: "info" | "warning" | "urgent" =
+      daysLeft !== null && daysLeft <= 1
+        ? "urgent"
+        : daysLeft !== null && daysLeft <= 3
+        ? "warning"
+        : "info";
+
     const summary = {
-      metric: urgent.length.toString(),
+      metric: all.length.toString(),
       unit: "DUE",
-      label: urgent.length === 0 ? "no urgent tasks" : "within 3 days",
-      alert: urgent.length > 0,
-      alertMessage: urgent[0]?.title ?? "",
-      urgency: urgent.length > 0 ? "urgent" : "info",
+      label,
+      alert: daysLeft !== null && daysLeft <= 3,
+      alertMessage: soonest
+        ? `${soonest.courseCode.toUpperCase()} · ${soonest.title}`
+        : "",
+      urgency,
     };
 
     return NextResponse.json(summary, { headers: corsHeaders });

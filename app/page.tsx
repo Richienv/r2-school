@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import { AddAssignmentSheet } from "@/components/AddAssignmentSheet";
-import { loadAssignments, syncLegacyAssignments, daysUntil, getCourse, formatShortDate, typeLabel, daysDisplay } from "@/lib/data";
+import { loadAssignments, syncLegacyAssignments, daysUntil, getCourse, formatShortDate, typeLabel } from "@/lib/data";
 import { useSettings } from "@/lib/settings";
 import type { Assignment } from "@/lib/types";
 
@@ -32,9 +32,6 @@ export default function HomePage() {
         .sort((a, b) => a.dueDate.localeCompare(b.dueDate)),
     [list]
   );
-
-  const visible = upcoming.slice(0, 4);
-  const hasMore = upcoming.length > 4;
 
   const urgent = upcoming.find((a) => {
     const d = daysUntil(a.dueDate);
@@ -90,22 +87,15 @@ export default function HomePage() {
         <span className="upcoming-label">UPCOMING</span>
       </div>
 
-      <div className="grid-area">
-        {!mounted ? null : visible.length === 0 ? (
+      <div className="tl-area">
+        {!mounted ? null : upcoming.length === 0 ? (
           <div className="grid-empty">NOTHING DUE.</div>
         ) : (
-          <>
-            <div className="grid-2x2">
-              {visible.map((a) => (
-                <GridCard key={a.id} a={a} threshold={threshold} />
-              ))}
-            </div>
-            {hasMore && (
-              <Link href="/courses" className="view-all">
-                VIEW ALL →
-              </Link>
-            )}
-          </>
+          <div className="tl-list">
+            {upcoming.map((a) => (
+              <TimelineRow key={a.id} a={a} />
+            ))}
+          </div>
         )}
       </div>
 
@@ -128,24 +118,29 @@ function shortUni(name: string): string {
   return m ? m.join("") : name.slice(0, 4).toUpperCase();
 }
 
-function GridCard({ a, threshold }: { a: Assignment; threshold: number }) {
+function TimelineRow({ a }: { a: Assignment }) {
   const course = getCourse(a.courseId);
   const d = daysUntil(a.dueDate);
-  const { label, variant } = daysDisplay(d, threshold);
+  const daysLabel = d < 0 ? `${d}D` : d === 0 ? "TODAY" : `${d}D`;
+  const daysVariant = d <= 1 ? "urgent" : d <= 3 ? "warn" : "cool";
+  const statusLabel = a.status.replace(/_/g, " ");
   return (
-    <Link href={`/assignment/${a.id}`} className="g-card">
-      <span className="g-tag">{course?.shortName ?? "—"}</span>
-      <div className="g-title">{a.title}</div>
-      <div className="g-foot">
-        <div className="g-meta">
-          {typeLabel(a.type)}
-          <br />
-          {formatShortDate(a.dueDate)}
+    <Link href={`/assignment/${a.id}`} className="tl-row">
+      <div className={`tl-days ${daysVariant}`}>{daysLabel}</div>
+      <div className="tl-body">
+        <div className="tl-code" style={{ color: course?.color ?? "#888" }}>
+          {course?.shortName ?? "—"}
         </div>
-        <span className={`g-days ${variant}`}>{label}</span>
-      </div>
-      <div className="g-track">
-        <div className="g-fill" style={{ width: `${a.progress ?? 0}%` }} />
+        <div className="tl-title">{a.title}</div>
+        <div className="tl-meta">
+          {typeLabel(a.type)} · {formatShortDate(a.dueDate)}
+        </div>
+        <div className="tl-progress">
+          <div className="tl-track">
+            <div className="tl-fill" style={{ width: `${a.progress ?? 0}%` }} />
+          </div>
+          <span className="tl-status">{statusLabel}</span>
+        </div>
       </div>
     </Link>
   );
