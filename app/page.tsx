@@ -21,7 +21,6 @@ export default function HomePage() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
   const [settings] = useSettings();
-  const threshold = settings.urgentThreshold;
 
   useEffect(() => {
     (async () => {
@@ -47,11 +46,6 @@ export default function HomePage() {
     const nearest = upcoming.find((a) => a.dueDate >= today) ?? upcoming[0];
     setSelectedDate(hasToday ? today : nearest.dueDate);
   }, [mounted, upcoming, selectedDate]);
-
-  const urgent = upcoming.find((a) => {
-    const d = daysUntil(a.dueDate);
-    return d >= 0 && d <= threshold;
-  });
 
   const weekDays = useMemo(() => buildWeek(list), [list]);
 
@@ -84,8 +78,6 @@ export default function HomePage() {
     setMonthAnchor(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
   }
 
-  const urgentCourse = urgent ? getCourse(urgent.courseId) : null;
-
   return (
     <div className="screen">
       <Header />
@@ -96,15 +88,6 @@ export default function HomePage() {
           <div className="info-meta">
             {settings.profile.studentId} · {settings.profile.program} · {shortUni(settings.profile.university)}
           </div>
-        </div>
-        <div className="info-right">
-          {urgent && mounted ? (
-            <Link href={`/assignment/${urgent.id}`} className="urgent-pill">
-              ⚡ {urgentCourse?.shortName} · {daysUntil(urgent.dueDate)}D
-            </Link>
-          ) : (
-            <span className="all-clear">ALL CLEAR</span>
-          )}
         </div>
       </div>
 
@@ -152,18 +135,35 @@ export default function HomePage() {
             {monthGrid.map((cell, i) => {
               if (!cell) return <span key={i} className="mc mc-empty" />;
               const selected = !showAll && selectedDate === cell.key;
+              const shown = cell.items.slice(0, 2);
+              const extra = cell.items.length - shown.length;
               return (
                 <button
                   key={cell.key}
                   type="button"
-                  className={`mc ${cell.today ? "today" : ""} ${selected ? "selected" : ""}`}
+                  className={`mc ${cell.today ? "today" : ""} ${selected ? "selected" : ""} ${cell.items.length > 0 ? "has-items" : ""}`}
                   onClick={() => {
                     pickDate(cell.key);
                     setMonthOpen(false);
                   }}
                 >
                   <span className="mc-num">{cell.num}</span>
-                  {cell.count > 0 && <span className="mc-dot" />}
+                  {shown.length > 0 && (
+                    <div className="mc-items">
+                      {shown.map((a) => {
+                        const c = getCourse(a.courseId);
+                        return (
+                          <div key={a.id} className="mc-item">
+                            <span className="mc-code" style={{ color: c?.color ?? "#888" }}>
+                              {c?.shortName ?? "—"}
+                            </span>
+                            <span className="mc-type">{shortTypeLabel(a.type)}</span>
+                          </div>
+                        );
+                      })}
+                      {extra > 0 && <div className="mc-more">+{extra}</div>}
+                    </div>
+                  )}
                 </button>
               );
             })}
@@ -255,7 +255,7 @@ function formatMonthTitle(anchor: string): string {
   return `${months[m - 1]} ${y}`;
 }
 
-type MonthCell = { key: string; num: number; count: number; today: boolean } | null;
+type MonthCell = { key: string; num: number; items: Assignment[]; today: boolean } | null;
 
 function buildMonth(anchor: string, list: Assignment[]): MonthCell[] {
   const [y, m] = anchor.split("-").map(Number);
@@ -268,12 +268,28 @@ function buildMonth(anchor: string, list: Assignment[]): MonthCell[] {
   for (let day = 1; day <= last.getDate(); day++) {
     const d = new Date(y, m - 1, day);
     const iso = `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    const count = list.filter((a) => a.dueDate === iso && a.status !== "DONE" && a.status !== "SUBMITTED").length;
+    const items = list.filter((a) => a.dueDate === iso && a.status !== "DONE" && a.status !== "SUBMITTED");
     const today = d.toDateString() === now.toDateString();
-    cells.push({ key: iso, num: day, count, today });
+    cells.push({ key: iso, num: day, items, today });
   }
   while (cells.length % 7 !== 0) cells.push(null);
   return cells;
+}
+
+function shortTypeLabel(t: string): string {
+  const map: Record<string, string> = {
+    GROUP_PRESENTATION: "Group Pres",
+    INDIVIDUAL_PRESENTATION: "Ind Pres",
+    INDIVIDUAL_PROJECT: "Ind Project",
+    HOMEWORK: "Homework",
+    MIDTERM: "Midterm",
+    FINAL: "Final",
+    EXAM: "Exam",
+    QUIZ: "Quiz",
+    MEETING: "Meeting",
+    PREPARATION: "Prep",
+  };
+  return map[t] ?? t.replace(/_/g, " ");
 }
 
 function buildWeek(list: Assignment[]) {
