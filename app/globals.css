@@ -1697,7 +1697,15 @@ input, textarea, select {
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 0;
+  font-size: 22px;
+  line-height: 1;
+  filter: grayscale(100%);
+  opacity: 0.75;
+}
+
+.bnav-item.active .bnav-icon {
+  filter: none;
+  opacity: 1;
 }
 
 .bnav-label {
@@ -1726,25 +1734,33 @@ input, textarea, select {
 }
 
 .os-btn {
-  width: 56px;
-  height: 56px;
+  width: 60px;
+  height: 60px;
   border-radius: 16px;
-  background: var(--accent);
-  color: #080808;
+  background: #ffffff;
+  color: #000000;
   border: none;
   cursor: pointer;
-  font-family: var(--display);
-  font-size: 16px;
-  letter-spacing: 2px;
+  font-family: var(--body);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 1px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transform: translateY(-12px);
-  box-shadow: 0 -4px 16px rgba(232, 255, 71, 0.20);
+  transform: translateY(-14px);
+  box-shadow:
+    0 0 28px rgba(232, 255, 71, 0.55),
+    0 0 12px rgba(232, 255, 71, 0.45),
+    0 4px 14px rgba(0, 0, 0, 0.5);
   transition: transform 100ms ease, box-shadow 100ms ease;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   padding: 0;
+}
+
+.os-btn:active {
+  transform: translateY(-14px) scale(0.95);
 }
 
 /* ── FILTER PILLS ── */
