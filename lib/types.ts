@@ -42,6 +42,21 @@ export interface Assignment {
   createdAt: string;
 }
 
+export type Confidence = "SHAKY" | "OKAY" | "SOLID";
+
+export interface WeekEntry {
+  id: string;
+  courseId: string;
+  weekNumber: number;
+  topicTitle: string;
+  covered: string;
+  keyConcepts: string[];
+  learned: string;
+  profNotes: string;
+  confidence: Confidence;
+  updatedAt: string;
+}
+
 export interface ClassNote {
   id: string;
   courseId: string;

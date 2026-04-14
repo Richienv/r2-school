@@ -1,6 +1,6 @@
 "use client";
 
-import type { Assignment, ClassNote, Course } from "./types";
+import type { Assignment, ClassNote, Course, WeekEntry } from "./types";
 
 export const COURSES: Course[] = [
   {
@@ -8,7 +8,7 @@ export const COURSES: Course[] = [
     name: "International Business",
     shortName: "IB",
     professor: "Prof. Simon Collinson",
-    color: "#FFFFFF",
+    color: "#2D7DD2",
     active: true,
   },
   {
@@ -16,15 +16,15 @@ export const COURSES: Course[] = [
     name: "Strategic Management",
     shortName: "SM",
     professor: "Prof.",
-    color: "#FFFFFF",
+    color: "#7B2FBE",
     active: true,
   },
   {
     id: "innovation",
-    name: "Innovation",
+    name: "Innovation & Change",
     shortName: "INN",
     professor: "Prof. Wenjing Lyu",
-    color: "#FFFFFF",
+    color: "#E8FF47",
     active: true,
   },
   {
@@ -32,7 +32,7 @@ export const COURSES: Course[] = [
     name: "Blockchain",
     shortName: "BC",
     professor: "Prof.",
-    color: "#FFFFFF",
+    color: "#F7931A",
     active: true,
   },
   {
@@ -40,15 +40,15 @@ export const COURSES: Course[] = [
     name: "AI Decision Making",
     shortName: "AI",
     professor: "Prof.",
-    color: "#FFFFFF",
+    color: "#00D4AA",
     active: true,
   },
   {
     id: "chinese",
-    name: "Chinese",
+    name: "Chinese (HSK)",
     shortName: "CN",
     professor: "Prof.",
-    color: "#FFFFFF",
+    color: "#FF6B6B",
     active: true,
   },
 ];
@@ -57,95 +57,140 @@ export function getCourse(id: string): Course | undefined {
   return COURSES.find((c) => c.id === id);
 }
 
-const SEED_ASSIGNMENTS: Assignment[] = [
-  {
-    id: "seed-ib-openai",
-    courseId: "ib",
-    title: "OpenAI vs DeepSeek",
-    type: "GROUP_PRESENTATION",
-    dueDate: "2026-04-15",
-    status: "IN_PROGRESS",
-    description: "Group 6 comparative strategy presentation",
-    groupMembers: ["Richie", "Member 2", "Member 3", "Member 4", "Member 5"],
-    notes: "",
-    progress: 40,
-    checklist: [
-      { id: "c1", text: "Research OpenAI background", done: true },
-      { id: "c2", text: "Research DeepSeek background", done: true },
-      { id: "c3", text: "Build slides", done: false },
-      { id: "c4", text: "Practice presentation", done: false },
-    ],
-    createdAt: "2026-04-01",
-  },
-  {
-    id: "seed-sm-case",
-    courseId: "sm",
-    title: "Weekly case analysis",
-    type: "HOMEWORK",
-    dueDate: "2026-04-20",
-    status: "NOT_STARTED",
-    description: "Individual case write-up",
-    notes: "",
-    progress: 0,
-    checklist: [],
-    createdAt: "2026-04-01",
-  },
-  {
-    id: "seed-inn-anthropic",
-    courseId: "innovation",
-    title: "Anthropic ecosystem proposal",
-    type: "INDIVIDUAL_PROJECT",
-    dueDate: "2026-04-20",
-    status: "IN_PROGRESS",
-    description: "Week 4 team project",
-    groupMembers: ["Ruitong", "He Yan", "Siwen", "Richie", "Enjia"],
-    notes: "",
-    progress: 20,
-    checklist: [],
-    createdAt: "2026-04-01",
-  },
-];
-
-const ASSIGN_KEY = "r2school.assignments.v2";
+const LEGACY_ASSIGN_KEY = "r2school.assignments.v2";
+const LEGACY_SYNC_FLAG = "r2school.synced.v1";
 const NOTES_KEY = "r2school.notes.v2";
-const SEED_FLAG = "r2school.seeded.v2";
+const COURSE_NOTES_KEY = "r2school.coursenotes.v1";
+const WEEK_ENTRIES_KEY = "r2school.weekentries.v1";
 
 function isBrowser() {
   return typeof window !== "undefined";
 }
 
-export function loadAssignments(): Assignment[] {
+function normalizeAssignment(raw: Record<string, unknown>): Assignment {
+  const due = raw.dueDate as string | undefined;
+  const dateOnly = due ? new Date(due).toISOString().slice(0, 10) : "";
+  const created = raw.createdAt as string | undefined;
+  const createdDate = created ? new Date(created).toISOString().slice(0, 10) : "";
+  return {
+    id: String(raw.id ?? ""),
+    courseId: String(raw.courseCode ?? raw.courseId ?? ""),
+    title: String(raw.title ?? ""),
+    type: raw.type as Assignment["type"],
+    dueDate: dateOnly,
+    status: (raw.status as Assignment["status"]) ?? "NOT_STARTED",
+    description: (raw.description as string) ?? undefined,
+    groupMembers: (raw.groupMembers as string[]) ?? undefined,
+    notes: (raw.notes as string) ?? undefined,
+    checklist: (raw.checklist as Assignment["checklist"]) ?? undefined,
+    progress: (raw.progress as number) ?? 0,
+    createdAt: createdDate,
+  };
+}
+
+export async function loadAssignments(): Promise<Assignment[]> {
   if (!isBrowser()) return [];
   try {
-    const seeded = localStorage.getItem(SEED_FLAG);
-    if (!seeded) {
-      localStorage.setItem(ASSIGN_KEY, JSON.stringify(SEED_ASSIGNMENTS));
-      localStorage.setItem(SEED_FLAG, "1");
-      return SEED_ASSIGNMENTS;
-    }
-    const raw = localStorage.getItem(ASSIGN_KEY);
-    return raw ? (JSON.parse(raw) as Assignment[]) : [];
+    const res = await fetch("/api/assignments", { cache: "no-store" });
+    if (!res.ok) return [];
+    const list = (await res.json()) as Record<string, unknown>[];
+    return list.map(normalizeAssignment);
   } catch {
     return [];
   }
 }
 
-export function saveAssignments(list: Assignment[]) {
+export async function createAssignment(a: Omit<Assignment, "id" | "createdAt">): Promise<Assignment | null> {
+  try {
+    const res = await fetch("/api/assignments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: a.title,
+        courseCode: a.courseId,
+        type: a.type,
+        dueDate: a.dueDate,
+        status: a.status,
+        progress: a.progress ?? 0,
+        description: a.description,
+        notes: a.notes,
+        groupMembers: a.groupMembers,
+        checklist: a.checklist,
+      }),
+    });
+    if (!res.ok) return null;
+    return normalizeAssignment(await res.json());
+  } catch {
+    return null;
+  }
+}
+
+export async function updateAssignment(id: string, patch: Partial<Assignment>): Promise<Assignment | null> {
+  try {
+    const body: Record<string, unknown> = { ...patch };
+    if (patch.courseId !== undefined) {
+      body.courseCode = patch.courseId;
+      delete body.courseId;
+    }
+    const res = await fetch(`/api/assignments/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) return null;
+    return normalizeAssignment(await res.json());
+  } catch {
+    return null;
+  }
+}
+
+export async function deleteAssignment(id: string): Promise<boolean> {
+  try {
+    const res = await fetch(`/api/assignments/${id}`, { method: "DELETE" });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function syncLegacyAssignments(): Promise<void> {
   if (!isBrowser()) return;
-  localStorage.setItem(ASSIGN_KEY, JSON.stringify(list));
-}
-
-export function upsertAssignment(a: Assignment) {
-  const list = loadAssignments();
-  const idx = list.findIndex((x) => x.id === a.id);
-  if (idx >= 0) list[idx] = a;
-  else list.push(a);
-  saveAssignments(list);
-}
-
-export function deleteAssignment(id: string) {
-  const list = loadAssignments().filter((x) => x.id !== id);
-  saveAssignments(list);
+  try {
+    if (localStorage.getItem(LEGACY_SYNC_FLAG)) return;
+    const raw = localStorage.getItem(LEGACY_ASSIGN_KEY);
+    if (!raw) {
+      localStorage.setItem(LEGACY_SYNC_FLAG, "1");
+      return;
+    }
+    const parsed = JSON.parse(raw) as Assignment[];
+    const legacy = parsed.filter((a) => !a.id.startsWith("seed-"));
+    if (legacy.length === 0) {
+      localStorage.setItem(LEGACY_SYNC_FLAG, "1");
+      localStorage.removeItem(LEGACY_ASSIGN_KEY);
+      return;
+    }
+    const payload = legacy.map((a) => ({
+      title: a.title,
+      courseCode: a.courseId,
+      type: a.type,
+      dueDate: a.dueDate,
+      status: a.status,
+      progress: a.progress ?? 0,
+      description: a.description,
+      notes: a.notes,
+      groupMembers: a.groupMembers,
+      checklist: a.checklist,
+    }));
+    const res = await fetch("/api/assignments/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assignments: payload }),
+    });
+    if (res.ok) {
+      localStorage.setItem(LEGACY_SYNC_FLAG, "1");
+      localStorage.removeItem(LEGACY_ASSIGN_KEY);
+    }
+  } catch {}
 }
 
 export function loadNotes(): ClassNote[] {
@@ -166,11 +211,11 @@ export function saveNote(n: ClassNote) {
 }
 
 export function daysUntil(dueDate: string, now = new Date()): number {
-  const d = new Date(dueDate + "T23:59:59");
   const today = new Date(now);
   today.setHours(0, 0, 0, 0);
-  const ms = d.getTime() - today.getTime();
-  return Math.ceil(ms / (1000 * 60 * 60 * 24));
+  const due = new Date(dueDate);
+  due.setHours(0, 0, 0, 0);
+  return Math.round((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 }
 
 export function urgencyColor(days: number): "danger" | "warning" | "accent" | "muted" {
@@ -178,6 +223,15 @@ export function urgencyColor(days: number): "danger" | "warning" | "accent" | "m
   if (days <= 5) return "warning";
   if (days <= 14) return "accent";
   return "muted";
+}
+
+export type DaysVariant = "danger" | "hot" | "cool";
+
+export function daysDisplay(days: number, threshold: number): { label: string; variant: DaysVariant } {
+  if (days < 0) return { label: "OVERDUE", variant: "danger" };
+  if (days === 0) return { label: "TODAY", variant: "danger" };
+  if (days <= threshold) return { label: `${days}D`, variant: "hot" };
+  return { label: `${days}D`, variant: "cool" };
 }
 
 export function formatShortDate(iso: string): string {
@@ -188,6 +242,73 @@ export function formatShortDate(iso: string): string {
 
 export function typeLabel(t: string): string {
   return t.replace(/_/g, " ");
+}
+
+export function loadWeekEntries(): WeekEntry[] {
+  if (!isBrowser()) return [];
+  try {
+    const raw = localStorage.getItem(WEEK_ENTRIES_KEY);
+    return raw ? (JSON.parse(raw) as WeekEntry[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function getWeekEntry(courseId: string, weekNumber: number): WeekEntry | undefined {
+  return loadWeekEntries().find((e) => e.courseId === courseId && e.weekNumber === weekNumber);
+}
+
+export function upsertWeekEntry(entry: WeekEntry) {
+  if (!isBrowser()) return;
+  const list = loadWeekEntries();
+  const idx = list.findIndex(
+    (e) => e.courseId === entry.courseId && e.weekNumber === entry.weekNumber
+  );
+  if (idx >= 0) list[idx] = entry;
+  else list.push(entry);
+  localStorage.setItem(WEEK_ENTRIES_KEY, JSON.stringify(list));
+}
+
+export function deleteWeekEntry(id: string) {
+  if (!isBrowser()) return;
+  const list = loadWeekEntries().filter((e) => e.id !== id);
+  localStorage.setItem(WEEK_ENTRIES_KEY, JSON.stringify(list));
+}
+
+export function currentWeekNumber(semesterStart: string, now = new Date()): number {
+  try {
+    const start = new Date(semesterStart);
+    start.setHours(0, 0, 0, 0);
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+    const days = Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    const w = Math.floor(days / 7) + 1;
+    return Math.max(1, Math.min(16, w));
+  } catch {
+    return 1;
+  }
+}
+
+export function loadCourseNote(courseId: string): string {
+  if (!isBrowser()) return "";
+  try {
+    const raw = localStorage.getItem(COURSE_NOTES_KEY);
+    if (!raw) return "";
+    const map = JSON.parse(raw) as Record<string, string>;
+    return map[courseId] ?? "";
+  } catch {
+    return "";
+  }
+}
+
+export function saveCourseNote(courseId: string, content: string) {
+  if (!isBrowser()) return;
+  try {
+    const raw = localStorage.getItem(COURSE_NOTES_KEY);
+    const map = raw ? (JSON.parse(raw) as Record<string, string>) : {};
+    map[courseId] = content;
+    localStorage.setItem(COURSE_NOTES_KEY, JSON.stringify(map));
+  } catch {}
 }
 
 export function newId(): string {

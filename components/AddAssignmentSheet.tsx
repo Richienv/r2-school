@@ -1,16 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { COURSES, upsertAssignment, newId } from "@/lib/data";
-import type { Assignment, AssignmentType } from "@/lib/types";
+import { COURSES, createAssignment } from "@/lib/data";
+import type { AssignmentStatus, AssignmentType } from "@/lib/types";
 
 const TYPES: { value: AssignmentType; label: string }[] = [
-  { value: "GROUP_PRESENTATION", label: "Group Presentation" },
-  { value: "INDIVIDUAL_PRESENTATION", label: "Individual Presentation" },
   { value: "HOMEWORK", label: "Homework" },
+  { value: "GROUP_PRESENTATION", label: "Group Presentation" },
   { value: "INDIVIDUAL_PROJECT", label: "Individual Project" },
-  { value: "MIDTERM", label: "Midterm" },
-  { value: "FINAL", label: "Final" },
+  { value: "INDIVIDUAL_PRESENTATION", label: "Individual Presentation" },
+  { value: "FINAL", label: "Exam" },
+  { value: "MIDTERM", label: "Quiz" },
+];
+
+const STATUSES: { value: AssignmentStatus; label: string }[] = [
+  { value: "NOT_STARTED", label: "Not Started" },
+  { value: "IN_PROGRESS", label: "In Progress" },
+  { value: "DONE", label: "Done" },
 ];
 
 export function AddAssignmentSheet({
@@ -26,36 +32,34 @@ export function AddAssignmentSheet({
   const [title, setTitle] = useState("");
   const [type, setType] = useState<AssignmentType>("HOMEWORK");
   const [dueDate, setDueDate] = useState("");
-  const [description, setDescription] = useState("");
-  const [members, setMembers] = useState("");
+  const [status, setStatus] = useState<AssignmentStatus>("NOT_STARTED");
+  const [progress, setProgress] = useState(0);
 
-  function save() {
+  async function save() {
     if (!title || !dueDate) return;
-    const a: Assignment = {
-      id: newId(),
+    await createAssignment({
       courseId,
       title,
       type,
       dueDate,
-      status: "NOT_STARTED",
-      description: description || undefined,
-      groupMembers: type === "GROUP_PRESENTATION" && members ? members.split(",").map((s) => s.trim()) : undefined,
+      status,
       notes: "",
-      progress: 0,
+      progress,
       checklist: [],
-      createdAt: new Date().toISOString().slice(0, 10),
-    };
-    upsertAssignment(a);
+    });
     onSaved();
   }
-
-  const isGroup = type === "GROUP_PRESENTATION";
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="sheet" onClick={(e) => e.stopPropagation()}>
         <div className="drag-handle" />
         <div className="sheet-title">ADD ASSIGNMENT</div>
+
+        <div className="field">
+          <label>TITLE</label>
+          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Assignment title" />
+        </div>
 
         <div className="field">
           <label>COURSE</label>
@@ -66,11 +70,6 @@ export function AddAssignmentSheet({
               </button>
             ))}
           </div>
-        </div>
-
-        <div className="field">
-          <label>TITLE</label>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Assignment title" />
         </div>
 
         <div className="field">
@@ -90,21 +89,37 @@ export function AddAssignmentSheet({
         </div>
 
         <div className="field">
-          <label>DESCRIPTION (OPTIONAL)</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Details..." />
+          <label>STATUS</label>
+          <div className="filter-pills" style={{ padding: 0, flexWrap: "wrap" }}>
+            {STATUSES.map((s) => (
+              <button key={s.value} className={`pill ${status === s.value ? "active" : ""}`} onClick={() => setStatus(s.value)}>
+                {s.label.toUpperCase()}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {isGroup && (
-          <div className="field">
-            <label>GROUP MEMBERS (COMMA-SEPARATED)</label>
-            <input value={members} onChange={(e) => setMembers(e.target.value)} placeholder="Richie, ..." />
+        <div className="field">
+          <label>PROGRESS</label>
+          <div className="slider-row">
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={5}
+              value={progress}
+              onChange={(e) => setProgress(Number(e.target.value))}
+            />
+            <span className="slider-val">{progress}%</span>
           </div>
-        )}
+        </div>
 
-        <button className="primary-btn" style={{ marginTop: 8 }} onClick={save} disabled={!title || !dueDate}>
-          SAVE ASSIGNMENT →
-        </button>
-        <button className="ghost-btn" onClick={onClose}>CANCEL</button>
+        <div className="sheet-actions">
+          <button className="ghost-btn" style={{ marginTop: 0 }} onClick={onClose}>CANCEL</button>
+          <button className="primary-btn" style={{ marginTop: 0 }} onClick={save} disabled={!title || !dueDate}>
+            SAVE ASSIGNMENT
+          </button>
+        </div>
       </div>
     </div>
   );

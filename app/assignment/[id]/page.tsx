@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { BottomNav } from "@/components/BottomNav";
-import { loadAssignments, upsertAssignment, deleteAssignment, getCourse, daysUntil, typeLabel, newId } from "@/lib/data";
+import { loadAssignments, updateAssignment, deleteAssignment, getCourse, daysUntil, typeLabel, newId } from "@/lib/data";
 import type { Assignment, AssignmentStatus, ChecklistItem } from "@/lib/types";
 
 const STATUSES: AssignmentStatus[] = ["NOT_STARTED", "IN_PROGRESS", "SUBMITTED", "DONE"];
@@ -16,8 +16,9 @@ export default function AssignmentDetail() {
   const [newItem, setNewItem] = useState("");
 
   useEffect(() => {
-    const found = loadAssignments().find((x) => x.id === params.id);
-    setA(found ?? null);
+    loadAssignments().then((list) => {
+      setA(list.find((x) => x.id === params.id) ?? null);
+    });
   }, [params.id]);
 
   if (!a) return <div className="screen"><div className="empty">NOT FOUND</div><BottomNav /></div>;
@@ -28,7 +29,7 @@ export default function AssignmentDetail() {
   function update(patch: Partial<Assignment>) {
     const next = { ...a!, ...patch };
     setA(next);
-    upsertAssignment(next);
+    updateAssignment(next.id, patch);
   }
 
   function toggleItem(id: string) {
@@ -44,9 +45,9 @@ export default function AssignmentDetail() {
     setNewItem("");
   }
 
-  function removeAssignment() {
+  async function removeAssignment() {
     if (!confirm("Delete this assignment?")) return;
-    deleteAssignment(a!.id);
+    await deleteAssignment(a!.id);
     router.push("/");
   }
 
@@ -79,8 +80,20 @@ export default function AssignmentDetail() {
               onChange={(e) => update({ dueDate: e.target.value })}
               style={{ flex: 1 }}
             />
-            <span style={{ fontFamily: "var(--display)", whiteSpace: "nowrap" }}>
-              {days < 0 ? `${Math.abs(days)} DAYS LATE` : days === 0 ? "TODAY" : `${days} DAYS`}
+            <span
+              style={{
+                fontFamily: "var(--display)",
+                whiteSpace: "nowrap",
+                color: days <= 0 ? "#ff4444" : "var(--accent)",
+              }}
+            >
+              {days < 0
+                ? "OVERDUE"
+                : days === 0
+                ? "TODAY"
+                : days === 1
+                ? "TOMORROW"
+                : `${days} DAYS`}
             </span>
           </div>
         </div>

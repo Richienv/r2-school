@@ -5,38 +5,56 @@ import Link from "next/link";
 import { HeaderBig } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import { COURSES, loadAssignments, daysUntil } from "@/lib/data";
+import { useSettings } from "@/lib/settings";
 import type { Assignment } from "@/lib/types";
 
 export default function CoursesPage() {
   const [list, setList] = useState<Assignment[]>([]);
-  useEffect(() => setList(loadAssignments()), []);
+  const [mounted, setMounted] = useState(false);
+  const [settings] = useSettings();
+  const threshold = settings.urgentThreshold;
+
+  useEffect(() => {
+    loadAssignments().then((l) => {
+      setList(l);
+      setMounted(true);
+    });
+  }, []);
 
   return (
     <div className="screen">
-      <HeaderBig title="COURSES" />
-      <div className="course-grid">
-        {COURSES.map((c) => {
-          const items = list.filter((a) => a.courseId === c.id);
-          const upcoming = items.filter((a) => a.status !== "DONE" && daysUntil(a.dueDate) >= 0).length;
-          const overdue = items.filter((a) => daysUntil(a.dueDate) < 0 && a.status !== "DONE").length;
-          return (
-            <Link key={c.id} href={`/courses/${c.id}`} className="course-card">
-              <div className="accent-dot" />
-              <div>
-                <div className="short">{c.shortName}</div>
-                <div className="full">{c.name.toUpperCase()}</div>
-                <div className="prof">{c.professor}</div>
-              </div>
-              <div className="stats">
-                <span>
-                  {upcoming} upcoming{overdue > 0 && <> · <span className="overdue-flag">{overdue} overdue!</span></>}
-                </span>
-                <span>›</span>
-              </div>
-            </Link>
-          );
-        })}
+      <HeaderBig title="COURSES" subtitle="GMBA · ZJU · SPRING 2026" />
+
+      <div className="course-list">
+        <div className="course-grid-2x3">
+          {COURSES.map((c) => {
+            const open = list.filter(
+              (a) => a.courseId === c.id && a.status !== "DONE" && a.status !== "SUBMITTED"
+            );
+            const urgent = open.filter((a) => {
+              const d = daysUntil(a.dueDate);
+              return d >= 0 && d <= threshold;
+            }).length;
+
+            const profName = settings.professors[c.id] || c.professor.replace(/^Prof\.?\s*/i, "");
+            const lastName = (profName.split(/\s+/).pop() || "").toUpperCase();
+
+            return (
+              <Link key={c.id} href={`/courses/${c.id}`} className="cx-card">
+                <div className="cx-top">
+                  <span className="cx-code">{c.shortName}</span>
+                  {mounted && urgent > 0 && (
+                    <span className="cx-urgent">⚡ {urgent} DUE</span>
+                  )}
+                </div>
+                <div className="cx-name">{c.name}</div>
+                <div className="cx-prof">{lastName || "—"}</div>
+              </Link>
+            );
+          })}
+        </div>
       </div>
+
       <BottomNav />
     </div>
   );
