@@ -154,12 +154,12 @@ export default function HomePage() {
                         const c = getCourse(a.courseId);
                         return (
                           <div key={a.id} className="mc-item">
-                            <span className="mc-code">[{c?.shortName ?? "—"}]</span>{" "}
-                            <span className="mc-title">{truncate(a.title, 10)}</span>
+                            <span className="mc-code">[{c?.shortName ?? "—"}]</span>
+                            <span className="mc-title">{a.title}</span>
                           </div>
                         );
                       })}
-                      {extra > 0 && <div className="mc-more">+{extra} more</div>}
+                      {extra > 0 && <div className="mc-more">+{extra}</div>}
                     </div>
                   )}
                 </button>
@@ -272,10 +272,6 @@ function buildMonth(anchor: string, list: Assignment[]): MonthCell[] {
   }
   while (cells.length % 7 !== 0) cells.push(null);
   return cells;
-}
-
-function truncate(s: string, n: number): string {
-  return s.length > n ? s.slice(0, n) + "…" : s;
 }
 
 

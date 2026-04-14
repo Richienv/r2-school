@@ -269,14 +269,13 @@ input, textarea, select {
   border: none;
   padding: 4px 2px;
   cursor: pointer;
-  color: var(--text-ghost);
+  color: #e8ff47;
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: 9px;
+  font-weight: 700;
   letter-spacing: 2px;
   -webkit-tap-highlight-color: transparent;
 }
-
-.week-toggle:hover { color: var(--accent); }
 
 .month-panel {
   padding: 10px 16px 14px;
@@ -386,26 +385,35 @@ input, textarea, select {
   flex-shrink: 0;
 }
 
-.mc.today {
-  border-color: var(--accent);
-}
-
-.mc.today .mc-num { color: var(--accent); }
-
-.mc.selected {
-  background: var(--accent);
-  border-color: var(--accent);
-}
-
 .mc.has-items {
-  background: #1a1a1a;
-  border-color: #2a2a2a;
+  background: #e8ff47;
+  border-color: #e8ff47;
+}
+
+.mc.has-items .mc-num { color: #000; }
+.mc.has-items .mc-code { color: rgba(0, 0, 0, 0.55); }
+.mc.has-items .mc-title { color: #000; }
+.mc.has-items .mc-more { color: #000; }
+
+.mc.today {
+  background: #e8ff47;
+  border: 2px solid #ffffff;
+}
+
+.mc.today .mc-num { color: #000; }
+.mc.today .mc-code { color: rgba(0, 0, 0, 0.55); }
+.mc.today .mc-title { color: #000; }
+.mc.today .mc-more { color: #000; }
+
+.mc.selected:not(.today) {
+  outline: 2px solid #ffffff;
+  outline-offset: -2px;
 }
 
 .mc.selected .mc-num,
 .mc.selected .mc-title,
-.mc.selected .mc-code,
 .mc.selected .mc-more { color: #080808 !important; }
+.mc.selected .mc-code { color: rgba(0, 0, 0, 0.55) !important; }
 
 .mc-items {
   display: flex;
@@ -416,12 +424,11 @@ input, textarea, select {
 }
 
 .mc-item {
-  display: block;
+  display: flex;
   min-width: 0;
+  gap: 3px;
+  align-items: baseline;
   line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .mc-code {
@@ -430,25 +437,31 @@ input, textarea, select {
   letter-spacing: 0.5px;
   color: #888;
   text-transform: uppercase;
+  flex-shrink: 0;
 }
 
 .mc-title {
-  font-family: var(--body);
-  font-size: 12px;
+  font-family: var(--mono);
+  font-size: 9px;
   color: #fff;
   font-weight: 500;
+  min-width: 0;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mc-more {
   font-family: var(--mono);
   font-size: 9px;
-  color: #555;
+  color: #e8ff47;
   letter-spacing: 0.5px;
   margin-top: 1px;
 }
 
 @media (max-width: 520px) {
-  .mc-title { font-size: 10px; }
+  .mc-title { font-size: 8px; }
   .mc-code { font-size: 8px; }
   .mc { min-height: 58px; }
   .mc.mc-empty { min-height: 58px; }
