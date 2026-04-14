@@ -154,14 +154,12 @@ export default function HomePage() {
                         const c = getCourse(a.courseId);
                         return (
                           <div key={a.id} className="mc-item">
-                            <span className="mc-code" style={{ color: c?.color ?? "#888" }}>
-                              {c?.shortName ?? "—"}
-                            </span>
-                            <span className="mc-type">{shortTypeLabel(a.type)}</span>
+                            <span className="mc-code">[{c?.shortName ?? "—"}]</span>{" "}
+                            <span className="mc-title">{truncate(a.title, 10)}</span>
                           </div>
                         );
                       })}
-                      {extra > 0 && <div className="mc-more">+{extra}</div>}
+                      {extra > 0 && <div className="mc-more">+{extra} more</div>}
                     </div>
                   )}
                 </button>
@@ -276,21 +274,10 @@ function buildMonth(anchor: string, list: Assignment[]): MonthCell[] {
   return cells;
 }
 
-function shortTypeLabel(t: string): string {
-  const map: Record<string, string> = {
-    GROUP_PRESENTATION: "Group Pres",
-    INDIVIDUAL_PRESENTATION: "Ind Pres",
-    INDIVIDUAL_PROJECT: "Ind Project",
-    HOMEWORK: "Homework",
-    MIDTERM: "Midterm",
-    FINAL: "Final",
-    EXAM: "Exam",
-    QUIZ: "Quiz",
-    MEETING: "Meeting",
-    PREPARATION: "Prep",
-  };
-  return map[t] ?? t.replace(/_/g, " ");
+function truncate(s: string, n: number): string {
+  return s.length > n ? s.slice(0, n) + "…" : s;
 }
+
 
 function buildWeek(list: Assignment[]) {
   const labels = ["M", "T", "W", "T", "F", "S", "S"];
