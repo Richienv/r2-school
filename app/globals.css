@@ -264,6 +264,135 @@ input, textarea, select {
   background: var(--accent);
 }
 
+.week-toggle {
+  background: none;
+  border: none;
+  padding: 4px 2px;
+  cursor: pointer;
+  color: var(--text-ghost);
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 2px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.week-toggle:hover { color: var(--accent); }
+
+.month-panel {
+  padding: 10px 16px 14px;
+  border-bottom: 0.5px solid var(--border);
+  animation: month-in 180ms ease-out;
+  flex-shrink: 0;
+}
+
+@keyframes month-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.month-nav-btn {
+  background: none;
+  border: 0.5px solid var(--border);
+  border-radius: 6px;
+  width: 28px;
+  height: 24px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 12px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.month-nav-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+.month-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text);
+}
+
+.month-dow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.month-dow-cell {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--text-ghost);
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.mc {
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mc.mc-empty {
+  background: transparent;
+  border: none;
+  pointer-events: none;
+}
+
+.mc-num {
+  font-family: var(--display);
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.mc.today {
+  border-color: var(--accent);
+}
+
+.mc.today .mc-num { color: var(--accent); }
+
+.mc.selected {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.mc.selected .mc-num { color: #080808; }
+
+.mc-dot {
+  position: absolute;
+  bottom: 3px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.mc.selected .mc-dot { background: #080808; }
+
 /* ── SECTION ── */
 
 .section-label {

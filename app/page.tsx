@@ -15,6 +15,11 @@ export default function HomePage() {
   const [showAdd, setShowAdd] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const [monthOpen, setMonthOpen] = useState(false);
+  const [monthAnchor, setMonthAnchor] = useState<string>(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
   const [settings] = useSettings();
   const threshold = settings.urgentThreshold;
 
@@ -50,6 +55,8 @@ export default function HomePage() {
 
   const weekDays = useMemo(() => buildWeek(list), [list]);
 
+  const monthGrid = useMemo(() => buildMonth(monthAnchor, list), [monthAnchor, list]);
+
   const filtered = useMemo(() => {
     if (showAll) return upcoming;
     if (!selectedDate) return [];
@@ -69,6 +76,12 @@ export default function HomePage() {
 
   function toggleAll() {
     setShowAll((v) => !v);
+  }
+
+  function shiftMonth(delta: number) {
+    const [y, m] = monthAnchor.split("-").map(Number);
+    const d = new Date(y, m - 1 + delta, 1);
+    setMonthAnchor(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
   }
 
   const urgentCourse = urgent ? getCourse(urgent.courseId) : null;
@@ -96,7 +109,14 @@ export default function HomePage() {
       </div>
 
       <div className="week-row">
-        <span className="week-label">WEEK</span>
+        <button
+          type="button"
+          className="week-label week-toggle"
+          onClick={() => setMonthOpen((v) => !v)}
+          aria-expanded={monthOpen}
+        >
+          {monthOpen ? "MONTH ▴" : "WEEK ▾"}
+        </button>
         <div className="week-pills">
           {weekDays.map((d) => {
             const selected = !showAll && selectedDate === d.key;
@@ -115,6 +135,41 @@ export default function HomePage() {
           })}
         </div>
       </div>
+
+      {monthOpen && (
+        <div className="month-panel">
+          <div className="month-nav">
+            <button type="button" className="month-nav-btn" onClick={() => shiftMonth(-1)} aria-label="Previous month">←</button>
+            <span className="month-title">{formatMonthTitle(monthAnchor)}</span>
+            <button type="button" className="month-nav-btn" onClick={() => shiftMonth(1)} aria-label="Next month">→</button>
+          </div>
+          <div className="month-dow">
+            {["M", "T", "W", "T", "F", "S", "S"].map((l, i) => (
+              <span key={i} className="month-dow-cell">{l}</span>
+            ))}
+          </div>
+          <div className="month-grid">
+            {monthGrid.map((cell, i) => {
+              if (!cell) return <span key={i} className="mc mc-empty" />;
+              const selected = !showAll && selectedDate === cell.key;
+              return (
+                <button
+                  key={cell.key}
+                  type="button"
+                  className={`mc ${cell.today ? "today" : ""} ${selected ? "selected" : ""}`}
+                  onClick={() => {
+                    pickDate(cell.key);
+                    setMonthOpen(false);
+                  }}
+                >
+                  <span className="mc-num">{cell.num}</span>
+                  {cell.count > 0 && <span className="mc-dot" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="upcoming-header">
         <span className="upcoming-label">
@@ -192,6 +247,33 @@ function TimelineRow({ a }: { a: Assignment }) {
       </div>
     </Link>
   );
+}
+
+function formatMonthTitle(anchor: string): string {
+  const [y, m] = anchor.split("-").map(Number);
+  const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+  return `${months[m - 1]} ${y}`;
+}
+
+type MonthCell = { key: string; num: number; count: number; today: boolean } | null;
+
+function buildMonth(anchor: string, list: Assignment[]): MonthCell[] {
+  const [y, m] = anchor.split("-").map(Number);
+  const first = new Date(y, m - 1, 1);
+  const last = new Date(y, m, 0);
+  const now = new Date();
+  const leading = (first.getDay() + 6) % 7;
+  const cells: MonthCell[] = [];
+  for (let i = 0; i < leading; i++) cells.push(null);
+  for (let day = 1; day <= last.getDate(); day++) {
+    const d = new Date(y, m - 1, day);
+    const iso = `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const count = list.filter((a) => a.dueDate === iso && a.status !== "DONE" && a.status !== "SUBMITTED").length;
+    const today = d.toDateString() === now.toDateString();
+    cells.push({ key: iso, num: day, count, today });
+  }
+  while (cells.length % 7 !== 0) cells.push(null);
+  return cells;
 }
 
 function buildWeek(list: Assignment[]) {
