@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { HeaderBig } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
-import { COURSES, loadAssignments } from "@/lib/data";
+import { loadAssignments } from "@/lib/data";
+import { useCourses } from "@/lib/courses";
 import {
   TIMEZONES,
   todayInTz,
@@ -19,6 +20,7 @@ type EditKey =
 
 export default function SettingsPage() {
   const [settings, update] = useSettings();
+  const [courses] = useCourses();
   const [edit, setEdit] = useState<EditKey>(null);
   const [draft, setDraft] = useState("");
   const [mounted, setMounted] = useState(false);
@@ -225,13 +227,13 @@ export default function SettingsPage() {
 
         {/* PROFESSORS */}
         <Section label="PROFESSORS" sub="tap to edit · used in Course tab">
-          {COURSES.map((c, i) => {
+          {courses.map((c, i) => {
             const key = `professor.${c.id}` as const;
             const current = settings.professors[c.id] ?? "";
             return (
               <div
                 key={c.id}
-                className={`set-row ${i === COURSES.length - 1 ? "set-row-last" : ""}`}
+                className={`set-row ${i === courses.length - 1 ? "set-row-last" : ""}`}
                 onClick={() => edit !== key && startEdit(key, current)}
               >
                 <span

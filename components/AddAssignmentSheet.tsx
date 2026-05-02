@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { COURSES, createAssignment } from "@/lib/data";
+import { createAssignment } from "@/lib/data";
+import { useCourses } from "@/lib/courses";
 import type { AssignmentType } from "@/lib/types";
 
 const TYPES: { value: AssignmentType; label: string }[] = [
@@ -24,7 +25,8 @@ export function AddAssignmentSheet({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [courseId, setCourseId] = useState(defaultCourseId ?? COURSES[0].id);
+  const [courses] = useCourses();
+  const [courseId, setCourseId] = useState(defaultCourseId ?? courses[0]?.id ?? "");
   const [title, setTitle] = useState("");
   const [type, setType] = useState<AssignmentType>("HOMEWORK");
   const [dueDate, setDueDate] = useState("");
@@ -58,7 +60,7 @@ export function AddAssignmentSheet({
         <div className="field">
           <label>COURSE</label>
           <div className="cc-grid">
-            {COURSES.map((c) => {
+            {courses.map((c) => {
               const selected = courseId === c.id;
               return (
                 <button

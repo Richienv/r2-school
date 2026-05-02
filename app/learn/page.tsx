@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation";
 import { HeaderBig } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import {
-  COURSES,
   currentWeekNumber,
   deleteWeekEntry,
   getWeekEntry,
@@ -13,6 +12,7 @@ import {
   newId,
   upsertWeekEntry,
 } from "@/lib/data";
+import { useCourses, getCourseById } from "@/lib/courses";
 import { useSettings } from "@/lib/settings";
 import type { Confidence, WeekEntry } from "@/lib/types";
 
@@ -38,6 +38,7 @@ export default function LearnPage() {
 function LearnInner() {
   const searchParams = useSearchParams();
   const [settings] = useSettings();
+  const [courses] = useCourses();
   const [courseId, setCourseId] = useState<string | null>(null);
   const [entries, setEntries] = useState<WeekEntry[]>([]);
   const [view, setView] = useState<View>({ kind: "list" });
@@ -48,7 +49,7 @@ function LearnInner() {
     setMounted(true);
     const c = searchParams.get("course");
     const w = searchParams.get("week");
-    if (c && COURSES.some((x) => x.id === c)) {
+    if (c && courses.some((x) => x.id === c)) {
       setCourseId(c);
       if (w) {
         const n = Number(w);
@@ -57,7 +58,7 @@ function LearnInner() {
         }
       }
     }
-  }, [searchParams]);
+  }, [searchParams, courses]);
 
   const currentWeek = useMemo(
     () => (mounted ? currentWeekNumber(settings.semesterStart) : 0),
@@ -120,7 +121,7 @@ function LearnInner() {
           SELECT COURSE
         </div>
         <div className="filter-pills" style={{ padding: 0, flexWrap: "wrap" }}>
-          {COURSES.map((c) => (
+          {courses.map((c) => (
             <button
               key={c.id}
               className={`pill ${courseId === c.id ? "active" : ""}`}
@@ -187,7 +188,7 @@ function FillTemplate({
   onDone: () => void;
   onCancel: () => void;
 }) {
-  const course = COURSES.find((c) => c.id === courseId);
+  const course = getCourseById(courseId);
   const [topicTitle, setTopicTitle] = useState(existing?.topicTitle ?? "");
   const [covered, setCovered] = useState(existing?.covered ?? "");
   const [concepts, setConcepts] = useState<string[]>(existing?.keyConcepts ?? []);
@@ -354,7 +355,7 @@ function WeekBriefing({
   onEdit: () => void;
   onDeleted: () => void;
 }) {
-  const course = COURSES.find((c) => c.id === entry.courseId);
+  const course = getCourseById(entry.courseId);
   const conf = CONFIDENCE_OPTIONS.find((c) => c.value === entry.confidence);
 
   function del() {

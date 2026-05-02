@@ -61,6 +61,16 @@ export interface WeekEntry {
   updatedAt: string;
 }
 
+export interface Grade {
+  id: string;
+  courseId: string;
+  label: string;
+  weight: number;
+  score: number | null;
+  notes?: string;
+  createdAt: string;
+}
+
 export interface ClassNote {
   id: string;
   courseId: string;

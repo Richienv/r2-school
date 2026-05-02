@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { BottomNav } from "@/components/BottomNav";
 import { AddAssignmentSheet } from "@/components/AddAssignmentSheet";
+import { CourseSheet } from "@/components/CourseSheet";
+import { GradeSheet } from "@/components/GradeSheet";
 import {
-  getCourse,
   loadAssignments,
   daysUntil,
   daysDisplay,
@@ -15,18 +16,26 @@ import {
   loadCourseNote,
   saveCourseNote,
 } from "@/lib/data";
+import { useCourses, getCourseById } from "@/lib/courses";
+import { useGrades, summarizeGrades, deleteGradesForCourse } from "@/lib/grades";
 import { useSettings } from "@/lib/settings";
-import type { Assignment } from "@/lib/types";
+import type { Assignment, Course, Grade } from "@/lib/types";
 
 export default function CourseDetail() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const course = getCourse(params.id);
+  const [courses, courseActions] = useCourses();
+  const course: Course | undefined = courses.find((c) => c.id === params.id) ?? getCourseById(params.id);
   const [list, setList] = useState<Assignment[]>([]);
   const [showAdd, setShowAdd] = useState(false);
+  const [showEditCourse, setShowEditCourse] = useState(false);
+  const [showAddGrade, setShowAddGrade] = useState(false);
+  const [editGrade, setEditGrade] = useState<Grade | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [savedFlash, setSavedFlash] = useState(false);
   const [settings] = useSettings();
+  const [grades] = useGrades(course?.id);
   const threshold = settings.urgentThreshold;
   const profOverride = course ? settings.professors[course.id] : "";
   const profDisplay = profOverride ? `Prof. ${profOverride}` : (course?.professor ?? "");
@@ -66,12 +75,29 @@ export default function CourseDetail() {
     router.push(`/learn?course=${course!.id}&week=${week}`);
   }
 
+  function deleteCourseFully() {
+    if (!course) return;
+    deleteGradesForCourse(course.id);
+    courseActions.remove(course.id);
+    router.push("/courses");
+  }
+
   const profUpper = profDisplay.replace(/^Prof\.?\s*/i, "").toUpperCase();
+  const summary = summarizeGrades(grades);
+  const earnedPct = summary.weightTotal > 0
+    ? Math.round((summary.earned / summary.weightTotal) * 100)
+    : 0;
+  const gradedAvgPct = summary.weightUsed > 0
+    ? Math.round((summary.earned / summary.weightUsed) * 100)
+    : 0;
 
   return (
     <div className="screen" style={{ ["--course-color" as string]: course.color }}>
       <div className="cd-header">
-        <Link href="/courses" className="cd-back">← COURSES</Link>
+        <div className="cd-top-row">
+          <Link href="/courses" className="cd-back">← COURSES</Link>
+          <button className="cd-edit-btn" onClick={() => setShowEditCourse(true)}>EDIT</button>
+        </div>
         <div className="cd-code">{course.shortName}</div>
         <div className="cd-name">{course.name}</div>
         <div className="cd-prof">{profUpper}</div>
@@ -83,6 +109,80 @@ export default function CourseDetail() {
           <div className="cd-label">PROFESSOR</div>
           <div className="cd-prof-name">{profDisplay || "—"}</div>
           <div className="cd-prof-sub">{course.name}</div>
+        </div>
+
+        {/* Grades */}
+        <div className="cd-section">
+          <div className="cd-head-row">
+            <div className="cd-label-group">
+              <span className="cd-label">GRADES</span>
+              <span className="cd-count">{grades.length}</span>
+            </div>
+            <button className="cd-add-btn" onClick={() => setShowAddGrade(true)}>+ ADD</button>
+          </div>
+
+          {grades.length === 0 ? (
+            <div className="empty" style={{ fontSize: 16, padding: "12px 0", textAlign: "left" }}>
+              NO GRADES YET.
+              <div className="empty-sub">Tap + ADD to track a graded component.</div>
+            </div>
+          ) : (
+            <>
+              <div className="grade-summary">
+                <div className="grade-summary-main">
+                  <span className="grade-summary-pct">{earnedPct}%</span>
+                  <span className="grade-summary-label">EARNED OF FINAL</span>
+                </div>
+                {summary.hasScores && (
+                  <div className="grade-summary-sub">
+                    AVG ON GRADED: <strong>{gradedAvgPct}%</strong>
+                    {" · "}
+                    {summary.weightUsed}/{summary.weightTotal} WEIGHT GRADED
+                  </div>
+                )}
+                <div className="grade-summary-track">
+                  <div
+                    className="grade-summary-fill"
+                    style={{ width: `${Math.min(100, summary.weightTotal)}%` }}
+                  />
+                </div>
+                <div className="grade-summary-foot">
+                  WEIGHT TRACKED: {summary.weightTotal}%
+                  {summary.weightTotal !== 100 && summary.weightTotal > 0 && (
+                    <span className="grade-summary-warn">
+                      {" "}· {summary.weightTotal > 100 ? "OVER 100%" : `${100 - summary.weightTotal}% LEFT`}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="grade-list">
+                {grades.map((g) => {
+                  const hasScore = g.score !== null && g.score !== undefined;
+                  return (
+                    <button
+                      key={g.id}
+                      className="grade-row"
+                      onClick={() => setEditGrade(g)}
+                    >
+                      <div className="grade-row-left">
+                        <div className="grade-row-label">{g.label}</div>
+                        <div className="grade-row-meta">{g.weight}% OF FINAL</div>
+                      </div>
+                      <div className="grade-row-right">
+                        {hasScore ? (
+                          <span className="grade-score">{g.score}%</span>
+                        ) : (
+                          <span className="grade-score grade-score-pending">—</span>
+                        )}
+                        <span className="grade-chev">›</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Assignments */}
@@ -158,6 +258,13 @@ export default function CourseDetail() {
             </button>
           </div>
         </div>
+
+        {/* Danger */}
+        <div className="cd-section">
+          <button className="cd-delete-btn" onClick={() => setConfirmDelete(true)}>
+            DELETE COURSE
+          </button>
+        </div>
       </div>
 
       <BottomNav />
@@ -167,6 +274,51 @@ export default function CourseDetail() {
           onClose={() => setShowAdd(false)}
           onSaved={refresh}
         />
+      )}
+      {showEditCourse && (
+        <CourseSheet
+          existing={course}
+          onClose={() => setShowEditCourse(false)}
+          onSaved={() => setShowEditCourse(false)}
+        />
+      )}
+      {showAddGrade && (
+        <GradeSheet
+          courseId={course.id}
+          onClose={() => setShowAddGrade(false)}
+          onSaved={() => setShowAddGrade(false)}
+        />
+      )}
+      {editGrade && (
+        <GradeSheet
+          courseId={course.id}
+          existing={editGrade}
+          onClose={() => setEditGrade(null)}
+          onSaved={() => setEditGrade(null)}
+        />
+      )}
+      {confirmDelete && (
+        <div className="sheet-backdrop" onClick={() => setConfirmDelete(false)}>
+          <div className="sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="drag-handle" />
+            <div className="sheet-title">DELETE {course.shortName}?</div>
+            <div style={{ color: "var(--text-dim)", fontSize: 14, marginBottom: 20 }}>
+              Removes the course and its grades. Assignments are kept.
+            </div>
+            <div className="sheet-actions">
+              <button className="ghost-btn" style={{ marginTop: 0 }} onClick={() => setConfirmDelete(false)}>
+                CANCEL
+              </button>
+              <button
+                className="primary-btn"
+                style={{ marginTop: 0, background: "#ff6b6b", color: "#080808" }}
+                onClick={deleteCourseFully}
+              >
+                DELETE
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

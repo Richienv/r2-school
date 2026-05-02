@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BottomNav } from "@/components/BottomNav";
-import { COURSES, getCourse, saveNote, newId } from "@/lib/data";
+import { getCourse, saveNote, newId } from "@/lib/data";
+import { useCourses } from "@/lib/courses";
 
 export default function CatchupPage() {
-  const [courseId, setCourseId] = useState(COURSES[0].id);
+  const [courses] = useCourses();
+  const [courseId, setCourseId] = useState(courses[0]?.id ?? "");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [content, setContent] = useState("");
   const [saved, setSaved] = useState(false);
@@ -54,7 +56,7 @@ export default function CatchupPage() {
         </div>
 
         <div className="filter-pills" style={{ padding: "12px 0" }}>
-          {COURSES.map((c) => (
+          {courses.map((c) => (
             <button key={c.id} className={`pill ${courseId === c.id ? "active" : ""}`} onClick={() => setCourseId(c.id)}>
               {c.shortName}
             </button>

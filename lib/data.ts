@@ -1,60 +1,18 @@
 "use client";
 
 import type { Assignment, ClassNote, Course, WeekEntry } from "./types";
+import { DEFAULT_COURSES, getAllCourses, getCourseById } from "./courses";
 
-export const COURSES: Course[] = [
-  {
-    id: "ib",
-    name: "International Business",
-    shortName: "IB",
-    professor: "Prof. Simon Collinson",
-    color: "#2D7DD2",
-    active: true,
-  },
-  {
-    id: "sm",
-    name: "Strategic Management",
-    shortName: "SM",
-    professor: "Prof.",
-    color: "#7B2FBE",
-    active: true,
-  },
-  {
-    id: "innovation",
-    name: "Innovation & Change",
-    shortName: "INN",
-    professor: "Prof. Wenjing Lyu",
-    color: "#E8FF47",
-    active: true,
-  },
-  {
-    id: "blockchain",
-    name: "Blockchain",
-    shortName: "BC",
-    professor: "Prof.",
-    color: "#F7931A",
-    active: true,
-  },
-  {
-    id: "ai",
-    name: "AI Decision Making",
-    shortName: "AI",
-    professor: "Prof.",
-    color: "#00D4AA",
-    active: true,
-  },
-  {
-    id: "chinese",
-    name: "Chinese (HSK)",
-    shortName: "CN",
-    professor: "Prof.",
-    color: "#FF6B6B",
-    active: true,
-  },
-];
+export { DEFAULT_COURSES, useCourses } from "./courses";
+
+export const COURSES: Course[] = DEFAULT_COURSES;
 
 export function getCourse(id: string): Course | undefined {
-  return COURSES.find((c) => c.id === id);
+  return getCourseById(id) ?? DEFAULT_COURSES.find((c) => c.id === id);
+}
+
+export function listCourses(): Course[] {
+  return getAllCourses();
 }
 
 const LEGACY_ASSIGN_KEY = "r2school.assignments.v2";

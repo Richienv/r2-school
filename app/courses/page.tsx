@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { HeaderBig } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
-import { COURSES, loadAssignments, daysUntil } from "@/lib/data";
+import { CourseSheet } from "@/components/CourseSheet";
+import { loadAssignments, daysUntil } from "@/lib/data";
+import { useCourses } from "@/lib/courses";
 import { useSettings } from "@/lib/settings";
 import type { Assignment } from "@/lib/types";
 
@@ -12,6 +14,8 @@ export default function CoursesPage() {
   const [list, setList] = useState<Assignment[]>([]);
   const [mounted, setMounted] = useState(false);
   const [settings] = useSettings();
+  const [courses] = useCourses();
+  const [showAdd, setShowAdd] = useState(false);
   const threshold = settings.urgentThreshold;
 
   useEffect(() => {
@@ -27,7 +31,7 @@ export default function CoursesPage() {
 
       <div className="course-list">
         <div className="course-grid-2x3">
-          {COURSES.map((c) => {
+          {courses.map((c) => {
             const open = list.filter(
               (a) => a.courseId === c.id && a.status !== "DONE" && a.status !== "SUBMITTED"
             );
@@ -52,10 +56,26 @@ export default function CoursesPage() {
               </Link>
             );
           })}
+
+          <button
+            className="cx-card cx-add"
+            onClick={() => setShowAdd(true)}
+            aria-label="Add course"
+          >
+            <div className="cx-add-plus">+</div>
+            <div className="cx-add-label">ADD COURSE</div>
+          </button>
         </div>
       </div>
 
       <BottomNav />
+
+      {showAdd && (
+        <CourseSheet
+          onClose={() => setShowAdd(false)}
+          onSaved={() => setShowAdd(false)}
+        />
+      )}
     </div>
   );
 }
