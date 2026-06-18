@@ -7,6 +7,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { AddAssignmentSheet } from "@/components/AddAssignmentSheet";
 import { loadAssignments, syncLegacyAssignments, daysUntil, getCourse, formatShortDate, typeLabel } from "@/lib/data";
 import { useSettings } from "@/lib/settings";
+import { useSoftRefresh } from "@/lib/useSoftRefresh";
 import type { Assignment } from "@/lib/types";
 
 export default function HomePage() {
@@ -30,6 +31,11 @@ export default function HomePage() {
       setMounted(true);
     })();
   }, []);
+
+  // Soft-pull: pick up Hermes-created/updated assignments without a hard reload.
+  useSoftRefresh(() => {
+    loadAssignments().then(setList);
+  });
 
   const upcoming = useMemo(
     () =>

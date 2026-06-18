@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { ServerSync } from "./ServerSync";
 
 export const metadata: Metadata = {
   title: "R2·SCHOOL",
@@ -23,6 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <ServerSync />
         <div className="app">
           {children}
         </div>

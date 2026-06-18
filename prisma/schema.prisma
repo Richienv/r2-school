@@ -45,3 +45,41 @@ model CourseNote {
   content    String
   updatedAt  DateTime @updatedAt
 }
+
+model StudySession {
+  id          String   @id @default(cuid())
+  date        String // YYYY-MM-DD (CST), denormalised for fast day queries
+  courseCode  String // one of the 6 slugs
+  durationMin Int
+  focus       Int? // 1-5 self-rating
+  topic       String? // free-text "what did you study"
+  notes       String?
+  startedAt   DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([date])
+  @@index([courseCode, startedAt])
+}
+
+model Note {
+  id         String   @id @default(cuid())
+  courseCode String? // null = global note
+  text       String
+  source     String   @default("richie-web") // hermes-ren, etc.
+  capturedAt DateTime @default(now())
+  pinned     Boolean  @default(false)
+
+  @@index([courseCode, capturedAt])
+}
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  actor      String
+  action     String
+  entityId   String?
+  entityType String?
+  payload    Json?
+  createdAt  DateTime @default(now())
+
+  @@index([actor, createdAt])
+}
