@@ -14,6 +14,7 @@ import {
 } from "@/lib/data";
 import { useCourses, getCourseById } from "@/lib/courses";
 import { useSettings } from "@/lib/settings";
+import { useStudySessions } from "@/lib/study";
 import type { Confidence, WeekEntry } from "@/lib/types";
 
 type View =
@@ -117,6 +118,8 @@ function LearnInner() {
       <HeaderBig title="LEARN" subtitle="Your weekly knowledge log." />
 
       <div className="scroll-area" style={{ padding: "16px 16px 40px" }}>
+        <StudyPanel />
+
         <div style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: 3, color: "var(--text-muted)", marginBottom: 10 }}>
           SELECT COURSE
         </div>
@@ -171,6 +174,67 @@ function LearnInner() {
       </div>
 
       <BottomNav />
+    </div>
+  );
+}
+
+// Additive surface: study sessions logged via Hermes/Ren (pulled from the
+// server by ServerSync) appear here within ~60s, no hard reload.
+function StudyPanel() {
+  const sessions = useStudySessions();
+  const recent = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 6);
+    const weekStart = d.toISOString().slice(0, 10);
+    return sessions
+      .filter((s) => s.date >= weekStart)
+      .sort((a, b) => (b.startedAt || b.date).localeCompare(a.startedAt || a.date));
+  }, [sessions]);
+
+  if (recent.length === 0) return null;
+
+  const total = recent.reduce((sum, s) => sum + (s.durationMin || 0), 0);
+  const hours = Math.round((total / 60) * 10) / 10;
+
+  return (
+    <div
+      style={{
+        marginBottom: 18,
+        padding: 14,
+        border: "0.5px solid var(--border)",
+        borderRadius: 12,
+        background: "var(--surface)",
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
+        <span style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: 3, color: "var(--text-muted)" }}>
+          STUDY · LAST 7 DAYS
+        </span>
+        <span style={{ fontFamily: "var(--display)", fontSize: 13, color: "var(--accent)" }}>
+          {hours}h · {total}m
+        </span>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {recent.slice(0, 5).map((s) => {
+          const c = getCourseById(s.courseCode);
+          return (
+            <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12 }}>
+              <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: c?.color ?? "#888", minWidth: 32 }}>
+                {c?.shortName ?? s.courseCode.toUpperCase()}
+              </span>
+              <span style={{ flex: 1, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {s.topic || "study"}
+              </span>
+              {typeof s.focus === "number" && (
+                <span style={{ fontFamily: "var(--mono)", fontSize: 9, color: "var(--text-muted)" }}>
+                  {"●".repeat(s.focus)}
+                </span>
+              )}
+              <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--text-dim)" }}>{s.durationMin}m</span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
